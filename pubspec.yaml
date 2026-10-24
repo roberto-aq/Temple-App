@@ -1,0 +1,65 @@
+name: temple
+description: "Temple: registro de entrenamiento con sobrecarga progresiva."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_svg: ^2.3.0
+  shared_preferences: ^2.5.5
+  supabase_flutter: 2.18.3
+  uuid: 4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Barlow
+      fonts:
+        - asset: assets/fonts/Barlow-Regular.ttf
+        - asset: assets/fonts/Barlow-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Barlow-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Barlow-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Barlow-ExtraBold.ttf
+          weight: 800
+    - family: BarlowCondensed
+      fonts:
+        - asset: assets/fonts/BarlowCondensed-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BarlowCondensed-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/BarlowCondensed-ExtraBold.ttf
+          weight: 800
+
+# Ícono de la app. Imágenes generadas con `flutter test tool/generate_icons.dart`;
+# se aplican a cada plataforma con `dart run flutter_launcher_icons`.
+flutter_launcher_icons:
+  image_path: assets/icon/icon.png
+  android: true
+  adaptive_icon_background: "#16181C"
+  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  adaptive_icon_monochrome: assets/icon/icon_monochrome.png
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    background_color: "#0D0E10"
+    theme_color: "#0D0E10"
+  windows:
+    generate: true
+    icon_size: 256
