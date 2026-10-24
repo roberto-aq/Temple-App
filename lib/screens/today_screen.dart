@@ -423,6 +423,7 @@ class _SessionItem extends StatelessWidget {
         : '${capitalize(agoText(prev.date, app.today))}: ${setsText(ex, prev.sets)}';
     final isRecord = app.isRecordOn(ex, day);
     final doneWord = plural(done, 'serie', 'series');
+    final total = done > 0 ? '${setsTotal(ex, sets)} en total' : null;
 
     return Container(
       constraints: const BoxConstraints(minHeight: 80),
@@ -448,7 +449,8 @@ class _SessionItem extends StatelessWidget {
                 radius: 18,
                 padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
                 semanticLabel:
-                    '${ex.name}, $done ${plural(done, 'serie registrada', 'series registradas')}',
+                    '${ex.name}, $done ${plural(done, 'serie registrada', 'series registradas')}'
+                    '${total == null ? '' : ', $total'}',
                 child: Row(
                   children: [
                     Expanded(
@@ -479,9 +481,18 @@ class _SessionItem extends StatelessWidget {
                               color: AppColors.textSecondary,
                             ),
                           ),
-                          if (done > 0) ...[
+                          if (total != null) ...[
                             const SizedBox(height: 10),
                             SetPills(count: done),
+                            const SizedBox(height: 6),
+                            Text(
+                              total,
+                              style: AppText.body(
+                                13,
+                                weight: FontWeight.w600,
+                                color: AppColors.accent,
+                              ),
+                            ),
                           ],
                         ],
                       ),

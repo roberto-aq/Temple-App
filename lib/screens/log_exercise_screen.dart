@@ -217,13 +217,26 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                       const SizedBox(width: 8),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          '${plural(logged.length, 'serie', 'series')} $dayWord',
-                          style: AppText.body(
-                            16,
-                            weight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${plural(logged.length, 'serie', 'series')} $dayWord',
+                              style: AppText.body(
+                                16,
+                                weight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            if (logged.isNotEmpty)
+                              Text(
+                                '${setsTotal(ex, logged)} en total',
+                                style: AppText.body(
+                                  14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const Spacer(),

@@ -124,6 +124,19 @@ String setLabel(Exercise ex, SetEntry s) => ex.weighted
     ? '${fmtNum(s.kg ?? 0)} kg × ${s.reps}'
     : '${s.reps} ${unitWord(ex)}';
 
+/// Total de las series: «45 reps» o, por tiempo, «2 min 15 seg».
+String setsTotal(Exercise ex, List<SetEntry> sets) {
+  final total = sets.fold(0, (sum, s) => sum + s.reps);
+  return ex.timed ? durationText(total) : '$total reps';
+}
+
+/// «45 seg», «2 min» o «2 min 15 seg».
+String durationText(int seconds) {
+  final m = seconds ~/ 60, s = seconds % 60;
+  if (m == 0) return '$s seg';
+  return s == 0 ? '$m min' : '$m min $s seg';
+}
+
 /// Para buscar sin acentos ni mayúsculas.
 String normalize(String t) {
   const from = 'áàäâéèëêíìïîóòöôúùüûñÁÀÄÂÉÈËÊÍÌÏÎÓÒÖÔÚÙÜÛÑ';

@@ -71,6 +71,14 @@ void main() {
       expect(setsText(pullups, repSets([8, 7])), '8, 7 reps');
       expect(setsText(plank, repSets([45, 40])), '45, 40 seg');
     });
+
+    test('total de las series', () {
+      expect(setsTotal(pullups, repSets([10, 8, 6])), '24 reps');
+      expect(setsTotal(bench, kgSets(60, [8, 8, 7])), '23 reps');
+      expect(setsTotal(plank, repSets([45, 40])), '1 min 25 seg');
+      expect(durationText(45), '45 seg');
+      expect(durationText(120), '2 min');
+    });
   });
 
   group('superar la última vez', () {
