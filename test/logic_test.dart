@@ -3,12 +3,31 @@ import 'package:temple/logic/format.dart';
 import 'package:temple/logic/progress.dart';
 import 'package:temple/models/models.dart';
 
-const bench = Exercise(id: 'press-banca', name: 'Press de banca', group: 'pecho', kind: ExerciseKind.weight);
-const pullups = Exercise(id: 'dominadas', name: 'Dominadas', group: 'espalda', kind: ExerciseKind.reps);
-const plank = Exercise(id: 'plancha', name: 'Plancha', group: 'core', kind: ExerciseKind.seconds);
+const bench = Exercise(
+  id: 'press-banca',
+  name: 'Press de banca',
+  group: 'pecho',
+  kind: ExerciseKind.weight,
+);
+const pullups = Exercise(
+  id: 'dominadas',
+  name: 'Dominadas',
+  group: 'espalda',
+  kind: ExerciseKind.reps,
+);
+const plank = Exercise(
+  id: 'plancha',
+  name: 'Plancha',
+  group: 'core',
+  kind: ExerciseKind.seconds,
+);
 
-List<SetEntry> kgSets(double kg, List<int> reps) => [for (final r in reps) SetEntry(reps: r, kg: kg)];
-List<SetEntry> repSets(List<int> reps) => [for (final r in reps) SetEntry(reps: r)];
+List<SetEntry> kgSets(double kg, List<int> reps) => [
+  for (final r in reps) SetEntry(reps: r, kg: kg),
+];
+List<SetEntry> repSets(List<int> reps) => [
+  for (final r in reps) SetEntry(reps: r),
+];
 
 void main() {
   group('formato', () {
@@ -42,14 +61,23 @@ void main() {
 
     test('resumen de series', () {
       expect(setsText(bench, kgSets(60, [8, 8, 7])), '60 kg × 8, 8, 7');
-      expect(setsText(bench, [const SetEntry(reps: 8, kg: 60), const SetEntry(reps: 6, kg: 65)]), '8 × 60 kg · 6 × 65 kg');
+      expect(
+        setsText(bench, [
+          const SetEntry(reps: 8, kg: 60),
+          const SetEntry(reps: 6, kg: 65),
+        ]),
+        '8 × 60 kg · 6 × 65 kg',
+      );
       expect(setsText(pullups, repSets([8, 7])), '8, 7 reps');
       expect(setsText(plank, repSets([45, 40])), '45, 40 seg');
     });
   });
 
   group('superar la última vez', () {
-    final prev = ExerciseSession(DateTime(2026, 10, 19), kgSets(60, [8, 8, 7, 6]));
+    final prev = ExerciseSession(
+      DateTime(2026, 10, 19),
+      kgSets(60, [8, 8, 7, 6]),
+    );
 
     test('sin series hoy propone una repetición más o subir peso', () {
       final b = beatInfo(bench, prev, const [], 0)!;
@@ -59,7 +87,10 @@ void main() {
 
     test('por debajo de 30 kg el salto de peso es 1 kg', () {
       final light = ExerciseSession(DateTime(2026, 10, 19), kgSets(14, [12]));
-      expect(beatInfo(bench, light, const [], 0)!.text, '14 kg × 13  o  15 kg × 12');
+      expect(
+        beatInfo(bench, light, const [], 0)!.text,
+        '14 kg × 13  o  15 kg × 12',
+      );
     });
 
     test('supera la última vez pero no el récord de siempre', () {
@@ -76,8 +107,24 @@ void main() {
     });
 
     test('sin peso y por tiempo', () {
-      expect(beatInfo(pullups, ExerciseSession(DateTime(2026), repSets([8, 7])), const [], 0)!.text, '9 reps en una serie');
-      expect(beatInfo(plank, ExerciseSession(DateTime(2026), repSets([45])), const [], 0)!.text, '50 seg en una serie');
+      expect(
+        beatInfo(
+          pullups,
+          ExerciseSession(DateTime(2026), repSets([8, 7])),
+          const [],
+          0,
+        )!.text,
+        '9 reps en una serie',
+      );
+      expect(
+        beatInfo(
+          plank,
+          ExerciseSession(DateTime(2026), repSets([45])),
+          const [],
+          0,
+        )!.text,
+        '50 seg en una serie',
+      );
     });
 
     test('sin sesión anterior no hay tarjeta', () {
@@ -85,18 +132,42 @@ void main() {
     });
 
     test('comparación serie a serie', () {
-      expect(compareSet(bench, const SetEntry(reps: 9, kg: 60), const SetEntry(reps: 8, kg: 60)), SetCompare.up);
-      expect(compareSet(bench, const SetEntry(reps: 8, kg: 60), const SetEntry(reps: 8, kg: 60)), SetCompare.equal);
-      expect(compareSet(bench, const SetEntry(reps: 6, kg: 60), const SetEntry(reps: 8, kg: 60)), SetCompare.down);
+      expect(
+        compareSet(
+          bench,
+          const SetEntry(reps: 9, kg: 60),
+          const SetEntry(reps: 8, kg: 60),
+        ),
+        SetCompare.up,
+      );
+      expect(
+        compareSet(
+          bench,
+          const SetEntry(reps: 8, kg: 60),
+          const SetEntry(reps: 8, kg: 60),
+        ),
+        SetCompare.equal,
+      );
+      expect(
+        compareSet(
+          bench,
+          const SetEntry(reps: 6, kg: 60),
+          const SetEntry(reps: 8, kg: 60),
+        ),
+        SetCompare.down,
+      );
     });
   });
 
   group('análisis de tendencia', () {
     final today = DateTime(2026, 10, 23);
     List<ExerciseSession> weekly(List<double> kgs) => [
-          for (var i = 0; i < kgs.length; i++)
-            ExerciseSession(today.subtract(Duration(days: 7 * (kgs.length - 1 - i))), kgSets(kgs[i], [8, 8])),
-        ];
+      for (var i = 0; i < kgs.length; i++)
+        ExerciseSession(
+          today.subtract(Duration(days: 7 * (kgs.length - 1 - i))),
+          kgSets(kgs[i], [8, 8]),
+        ),
+    ];
 
     test('mejorando', () {
       final a = ExerciseAnalysis(bench, weekly([50, 52.5, 55, 57.5]), today);
@@ -127,16 +198,30 @@ void main() {
     });
 
     test('sugerencia para la próxima sesión', () {
-      expect(ExerciseAnalysis(bench, weekly([60]), today).suggestion,
-          'Hiciste todas las series a 8 reps con 60 kg. Prueba con 62,5 kg, aunque bajen un poco las repeticiones.');
-      final mixed = [ExerciseSession(today, kgSets(60, [8, 6]))];
-      expect(ExerciseAnalysis(bench, mixed, today).suggestion, contains('Mantén 60 kg e intenta llegar a 8 reps'));
-      expect(ExerciseAnalysis(plank, [ExerciseSession(today, repSets([40, 40]))], today).suggestion,
-          'Intenta aguantar 45 segundos por serie.');
+      expect(
+        ExerciseAnalysis(bench, weekly([60]), today).suggestion,
+        'Hiciste todas las series a 8 reps con 60 kg. Prueba con 62,5 kg, aunque bajen un poco las repeticiones.',
+      );
+      final mixed = [
+        ExerciseSession(today, kgSets(60, [8, 6])),
+      ];
+      expect(
+        ExerciseAnalysis(bench, mixed, today).suggestion,
+        contains('Mantén 60 kg e intenta llegar a 8 reps'),
+      );
+      expect(
+        ExerciseAnalysis(plank, [
+          ExerciseSession(today, repSets([40, 40])),
+        ], today).suggestion,
+        'Intenta aguantar 45 segundos por serie.',
+      );
     });
 
     test('métricas', () {
-      final sets = [const SetEntry(reps: 10, kg: 60), const SetEntry(reps: 8, kg: 65)];
+      final sets = [
+        const SetEntry(reps: 10, kg: 60),
+        const SetEntry(reps: 8, kg: 65),
+      ];
       expect(metricValue(bench, sets, MetricId.weight), 65);
       expect(metricValue(bench, sets, MetricId.volume), 1120);
       expect(metricValue(bench, sets, MetricId.main), 82.3);

@@ -30,12 +30,23 @@ class SupabaseBackend implements RemoteBackend {
     final out = <Map<String, dynamic>>[];
     // Por páginas: la API devuelve como mucho `max_rows` filas por consulta.
     while (true) {
-      final query = _db.from(table.table).select(_columns[table]!).eq('user_id', _userId);
+      final query = _db
+          .from(table.table)
+          .select(_columns[table]!)
+          .eq('user_id', _userId);
       final ordered = switch (table) {
-        SyncTable.exercises => query.order('created_at').order('id', ascending: true),
-        SyncTable.routines => query.order('created_at', ascending: true).order('id', ascending: true),
+        SyncTable.exercises =>
+          query.order('created_at').order('id', ascending: true),
+        SyncTable.routines =>
+          query
+              .order('created_at', ascending: true)
+              .order('id', ascending: true),
         SyncTable.dayPlans => query.order('day', ascending: true),
-        SyncTable.sets => query.order('day', ascending: true).order('logged_at', ascending: true).order('id', ascending: true),
+        SyncTable.sets =>
+          query
+              .order('day', ascending: true)
+              .order('logged_at', ascending: true)
+              .order('id', ascending: true),
       };
       final page = await ordered.range(out.length, out.length + _pageSize - 1);
       if (page.isEmpty) return out;
@@ -44,12 +55,15 @@ class SupabaseBackend implements RemoteBackend {
   }
 
   @override
-  Future<void> upsert(SyncTable table, List<Map<String, dynamic>> rows) => _db.from(table.table).upsert(
-        [for (final r in rows) {...r, 'user_id': _userId}],
-        onConflict: table == SyncTable.dayPlans ? 'user_id,day' : 'id',
-      );
+  Future<void> upsert(SyncTable table, List<Map<String, dynamic>> rows) =>
+      _db.from(table.table).upsert([
+        for (final r in rows) {...r, 'user_id': _userId},
+      ], onConflict: table == SyncTable.dayPlans ? 'user_id,day' : 'id');
 
   @override
-  Future<void> delete(SyncTable table, List<String> keys) =>
-      _db.from(table.table).delete().eq('user_id', _userId).inFilter(table.keyColumn, keys);
+  Future<void> delete(SyncTable table, List<String> keys) => _db
+      .from(table.table)
+      .delete()
+      .eq('user_id', _userId)
+      .inFilter(table.keyColumn, keys);
 }

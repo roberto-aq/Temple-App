@@ -20,8 +20,12 @@ String groupLabel(String id) {
   return id;
 }
 
-Exercise _e(String id, String name, String group, [ExerciseKind kind = ExerciseKind.weight]) =>
-    Exercise(id: id, name: name, group: group, kind: kind);
+Exercise _e(
+  String id,
+  String name,
+  String group, [
+  ExerciseKind kind = ExerciseKind.weight,
+]) => Exercise(id: id, name: name, group: group, kind: kind);
 
 /// Biblioteca base de ejercicios.
 final baseExercises = <Exercise>[
@@ -55,6 +59,11 @@ final baseExercises = <Exercise>[
   _e('curl-muneca-inverso', 'Curl de muñeca inverso', 'antebrazo'),
   _e('plancha', 'Plancha', 'core', ExerciseKind.seconds),
   _e('abdominales', 'Abdominales', 'core', ExerciseKind.reps),
-  _e('elevacion-piernas', 'Elevación de piernas colgado', 'core', ExerciseKind.reps),
+  _e(
+    'elevacion-piernas',
+    'Elevación de piernas colgado',
+    'core',
+    ExerciseKind.reps,
+  ),
   _e('rueda', 'Rueda abdominal', 'core', ExerciseKind.reps),
 ];

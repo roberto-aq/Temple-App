@@ -14,7 +14,9 @@ final today = DateTime(2026, 10, 23);
 
 /// Servidor en memoria: filas por tabla y clave, como las guarda Supabase.
 class FakeBackend implements RemoteBackend {
-  final tables = {for (final t in SyncTable.values) t: <String, Map<String, dynamic>>{}};
+  final tables = {
+    for (final t in SyncTable.values) t: <String, Map<String, dynamic>>{},
+  };
   bool online = true;
 
   /// Si existe, las descargas esperan a que se complete.
@@ -37,7 +39,12 @@ class FakeBackend implements RemoteBackend {
   @override
   Future<void> upsert(SyncTable table, List<Map<String, dynamic>> rows) async {
     _check();
-    if (rows.any(reject)) throw const PostgrestException(message: 'violates check constraint', code: '23514');
+    if (rows.any(reject)) {
+      throw const PostgrestException(
+        message: 'violates check constraint',
+        code: '23514',
+      );
+    }
     for (final r in rows) {
       tables[table]![r[table.keyColumn] as String] = Map.of(r);
     }
@@ -57,7 +64,11 @@ void main() {
   late SyncService sync;
   late AppState app;
 
-  SyncService newSync() => SyncService(backend: server, storage: outboxStorage, clock: () => fixedNow);
+  SyncService newSync() => SyncService(
+    backend: server,
+    storage: outboxStorage,
+    clock: () => fixedNow,
+  );
 
   setUp(() {
     server = FakeBackend();
@@ -70,8 +81,15 @@ void main() {
   tearDown(() => sync.dispose());
 
   test('cada cambio llega al servidor con sus columnas', () async {
-    final ex = app.createExercise(name: 'Hip thrust', group: 'piernas', kind: ExerciseKind.weight);
-    final rid = app.saveRoutine(name: 'Glúteos', items: [RoutineItem(exerciseId: ex.id, sets: 4, reps: 10)]);
+    final ex = app.createExercise(
+      name: 'Hip thrust',
+      group: 'piernas',
+      kind: ExerciseKind.weight,
+    );
+    final rid = app.saveRoutine(
+      name: 'Glúteos',
+      items: [RoutineItem(exerciseId: ex.id, sets: 4, reps: 10)],
+    );
     app.loadRoutine(rid, today);
     app.addSet(today, ex.id, const SetEntry(reps: 10, kg: 80));
     expect(sync.pending, 4);
@@ -79,7 +97,12 @@ void main() {
     await sync.flush();
     expect(sync.pending, 0);
     expect(sync.status, SyncStatus.synced);
-    expect(server.tables[SyncTable.exercises]![ex.id], {'id': ex.id, 'name': 'Hip thrust', 'muscle_group': 'piernas', 'kind': 'weight'});
+    expect(server.tables[SyncTable.exercises]![ex.id], {
+      'id': ex.id,
+      'name': 'Hip thrust',
+      'muscle_group': 'piernas',
+      'kind': 'weight',
+    });
     expect(server.tables[SyncTable.routines]![rid]!['items'], [
       {'ex': ex.id, 'sets': 4, 'reps': 10},
     ]);
@@ -93,13 +116,20 @@ void main() {
     expect(set['exercise_id'], ex.id);
     expect(set['reps'], 10);
     expect(set['kg'], 80.0);
-    expect(DateTime.parse(set['logged_at'] as String).isAtSameMomentAs(fixedNow), isTrue, reason: 'se guarda en UTC');
+    expect(
+      DateTime.parse(set['logged_at'] as String).isAtSameMomentAs(fixedNow),
+      isTrue,
+      reason: 'se guarda en UTC',
+    );
   });
 
   test('editar y borrar series y rutinas', () async {
     app.addSet(today, 'curl', const SetEntry(reps: 12, kg: 15));
     app.addSet(today, 'curl', const SetEntry(reps: 10, kg: 15));
-    final rid = app.saveRoutine(name: 'Brazos', items: const [RoutineItem(exerciseId: 'curl')]);
+    final rid = app.saveRoutine(
+      name: 'Brazos',
+      items: const [RoutineItem(exerciseId: 'curl')],
+    );
     await sync.flush();
 
     app.replaceSet(today, 'curl', 0, const SetEntry(reps: 12, kg: 17.5));
@@ -120,7 +150,11 @@ void main() {
     await sync.flush();
 
     expect(sync.status, SyncStatus.offline);
-    expect(sync.pending, 2, reason: 'dos series; la editada cuenta una sola vez');
+    expect(
+      sync.pending,
+      2,
+      reason: 'dos series; la editada cuenta una sola vez',
+    );
     expect(app.setsOn(today, 'press-banca').map((s) => s.reps), [8, 7]);
 
     server.online = true;
@@ -131,39 +165,42 @@ void main() {
     expect(app.setsOn(today, 'press-banca').map((s) => s.reps), [8, 7]);
   });
 
-  test('al descargar se combinan los datos del servidor con lo pendiente', () async {
-    // Lo que otro teléfono ya subió.
-    server.tables[SyncTable.routines]!['r-otro'] = {
-      'id': 'r-otro',
-      'name': 'Piernas',
-      'items': [
-        {'ex': 'sentadilla', 'sets': 4, 'reps': 8},
-      ],
-    };
-    server.tables[SyncTable.sets]!['s-otro'] = {
-      'id': 's-otro',
-      'day': '2026-10-19',
-      'exercise_id': 'sentadilla',
-      'reps': 8,
-      'kg': 100,
-      'logged_at': '2026-10-19T23:00:00Z',
-    };
-    await sync.refresh();
-    expect(app.routine('r-otro')!.name, 'Piernas');
-    expect(app.setsOn(DateTime(2026, 10, 19), 'sentadilla').single.kg, 100.0);
+  test(
+    'al descargar se combinan los datos del servidor con lo pendiente',
+    () async {
+      // Lo que otro teléfono ya subió.
+      server.tables[SyncTable.routines]!['r-otro'] = {
+        'id': 'r-otro',
+        'name': 'Piernas',
+        'items': [
+          {'ex': 'sentadilla', 'sets': 4, 'reps': 8},
+        ],
+      };
+      server.tables[SyncTable.sets]!['s-otro'] = {
+        'id': 's-otro',
+        'day': '2026-10-19',
+        'exercise_id': 'sentadilla',
+        'reps': 8,
+        'kg': 100,
+        'logged_at': '2026-10-19T23:00:00Z',
+      };
+      await sync.refresh();
+      expect(app.routine('r-otro')!.name, 'Piernas');
+      expect(app.setsOn(DateTime(2026, 10, 19), 'sentadilla').single.kg, 100.0);
 
-    // Una serie registrada mientras se descarga no la borra la descarga.
-    server.gate = Completer<void>();
-    final downloading = sync.refresh();
-    app.addSet(today, 'sentadilla', const SetEntry(reps: 8, kg: 102.5));
-    server.gate!.complete();
-    await downloading;
-    expect(app.setsOn(today, 'sentadilla').single.kg, 102.5);
-    expect(app.setsOn(DateTime(2026, 10, 19), 'sentadilla'), hasLength(1));
+      // Una serie registrada mientras se descarga no la borra la descarga.
+      server.gate = Completer<void>();
+      final downloading = sync.refresh();
+      app.addSet(today, 'sentadilla', const SetEntry(reps: 8, kg: 102.5));
+      server.gate!.complete();
+      await downloading;
+      expect(app.setsOn(today, 'sentadilla').single.kg, 102.5);
+      expect(app.setsOn(DateTime(2026, 10, 19), 'sentadilla'), hasLength(1));
 
-    await sync.flush();
-    expect(server.tables[SyncTable.sets], hasLength(2));
-  });
+      await sync.flush();
+      expect(server.tables[SyncTable.sets], hasLength(2));
+    },
+  );
 
   test('un cambio rechazado por el servidor no bloquea la cola', () async {
     server.reject = (r) => r['reps'] == 999;
@@ -178,7 +215,11 @@ void main() {
 
   test('la cola y la copia local sobreviven a cerrar la app', () async {
     server.online = false;
-    final ex = app.createExercise(name: 'Remo invertido', group: 'espalda', kind: ExerciseKind.reps);
+    final ex = app.createExercise(
+      name: 'Remo invertido',
+      group: 'espalda',
+      kind: ExerciseKind.reps,
+    );
     app.addSet(today, ex.id, const SetEntry(reps: 12));
     sync.dispose();
 
@@ -197,12 +238,15 @@ void main() {
     expect(server.tables[SyncTable.exercises]!.keys, [ex.id]);
   });
 
-  test('un cambio nuevo de la misma fila no se pierde si llega durante el envío', () {
-    final outbox = Outbox(MemoryStorage());
-    outbox.add(const Change(SyncTable.sets, 'a', {'reps': 8}));
-    final sending = outbox.changes;
-    outbox.add(const Change(SyncTable.sets, 'a', {'reps': 9}));
-    outbox.remove(sending);
-    expect(outbox.changes.single.row, {'reps': 9});
-  });
+  test(
+    'un cambio nuevo de la misma fila no se pierde si llega durante el envío',
+    () {
+      final outbox = Outbox(MemoryStorage());
+      outbox.add(const Change(SyncTable.sets, 'a', {'reps': 8}));
+      final sending = outbox.changes;
+      outbox.add(const Change(SyncTable.sets, 'a', {'reps': 9}));
+      outbox.remove(sending);
+      expect(outbox.changes.single.row, {'reps': 9});
+    },
+  );
 }

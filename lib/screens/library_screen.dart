@@ -81,11 +81,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
     switch (mode) {
       case LibraryMode.draft:
         widget.draft!.add(ex);
-        app.flash('«${ex.name}» creado y agregado a la rutina.', ToastTarget.library, highlightId: ex.id);
+        app.flash(
+          '«${ex.name}» creado y agregado a la rutina.',
+          ToastTarget.library,
+          highlightId: ex.id,
+        );
       case LibraryMode.session:
         _log(ex);
       case LibraryMode.browse:
-        app.flash('«${ex.name}» agregado a tu biblioteca.', ToastTarget.library, highlightId: ex.id);
+        app.flash(
+          '«${ex.name}» agregado a tu biblioteca.',
+          ToastTarget.library,
+          highlightId: ex.id,
+        );
     }
   }
 
@@ -93,7 +101,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     final body = widget.draft == null
         ? _buildContent(context)
-        : ListenableBuilder(listenable: widget.draft!, builder: (context, _) => _buildContent(context));
+        : ListenableBuilder(
+            listenable: widget.draft!,
+            builder: (context, _) => _buildContent(context),
+          );
     // En la pestaña ya hay Scaffold (HomeShell); al elegir, es una pantalla propia.
     return _picking ? Scaffold(body: SafeArea(child: body)) : body;
   }
@@ -107,7 +118,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final list = app.exercises.where((ex) {
       if (_group != 'todos' && ex.group != _group) return false;
       if (query.isEmpty) return true;
-      return normalize(ex.name).contains(query) || normalize(groupLabel(ex.group)).contains(query);
+      return normalize(ex.name).contains(query) ||
+          normalize(groupLabel(ex.group)).contains(query);
     }).toList();
     final toast = app.toastFor(ToastTarget.library);
     final draft = widget.draft;
@@ -123,7 +135,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
               if (widget.mode == LibraryMode.draft)
                 Row(
                   children: [
-                    CircleIconButton(icon: AppIcons.chevronLeft, iconSize: 22, semanticLabel: 'Volver a la rutina', onTap: () => Navigator.pop(context)),
+                    CircleIconButton(
+                      icon: AppIcons.chevronLeft,
+                      iconSize: 22,
+                      semanticLabel: 'Volver a la rutina',
+                      onTap: () => Navigator.pop(context),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -141,7 +158,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Center(
                         widthFactor: 1,
-                        child: Text('Listo · ${draft.items.length}', style: AppText.body(15, weight: FontWeight.w700, color: AppColors.background)),
+                        child: Text(
+                          'Listo · ${draft.items.length}',
+                          style: AppText.body(
+                            15,
+                            weight: FontWeight.w700,
+                            color: AppColors.background,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -149,15 +173,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
               if (widget.mode == LibraryMode.session)
                 Row(
                   children: [
-                    CircleIconButton(icon: AppIcons.chevronLeft, iconSize: 22, semanticLabel: 'Volver al entrenamiento', onTap: () => Navigator.pop(context)),
+                    CircleIconButton(
+                      icon: AppIcons.chevronLeft,
+                      iconSize: 22,
+                      semanticLabel: 'Volver al entrenamiento',
+                      onTap: () => Navigator.pop(context),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: Text('Agregar a tu entrenamiento de $dayWord', style: AppText.body(14, color: AppColors.textSecondary))),
+                    Expanded(
+                      child: Text(
+                        'Agregar a tu entrenamiento de $dayWord',
+                        style: AppText.body(14, color: AppColors.textSecondary),
+                      ),
+                    ),
                   ],
                 ),
               SizedBox(height: _picking ? 8 : 6),
               Row(
                 children: [
-                  Expanded(child: ScreenTitle(_picking ? 'Elegir ejercicio' : 'Ejercicios', size: 40)),
+                  Expanded(
+                    child: ScreenTitle(
+                      _picking ? 'Elegir ejercicio' : 'Ejercicios',
+                      size: 40,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   HeaderActionPill(label: 'Crear', onTap: () => _create()),
                 ],
@@ -176,15 +215,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   prefixIcon: const Padding(
                     padding: EdgeInsets.only(left: 14, right: 10),
-                    child: AppIcon(AppIcons.search, color: AppColors.textSecondary),
+                    child: AppIcon(
+                      AppIcons.search,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 20),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 20,
+                  ),
                   suffixIcon: _search.text.isEmpty
                       ? null
                       : IconButton(
                           tooltip: 'Borrar búsqueda',
                           onPressed: () => setState(_search.clear),
-                          icon: const AppIcon(AppIcons.close, size: 18, color: AppColors.textSecondary),
+                          icon: const AppIcon(
+                            AppIcons.close,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -192,7 +241,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppColors.textSecondary),
+                    borderSide: const BorderSide(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -203,8 +254,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ChipRow(
           semanticLabel: 'Filtrar por grupo muscular',
           children: [
-            FilterChipButton(label: 'Todos', selected: _group == 'todos', onTap: () => setState(() => _group = 'todos')),
-            for (final g in muscleGroups) FilterChipButton(label: g.label, selected: _group == g.id, onTap: () => setState(() => _group = g.id)),
+            FilterChipButton(
+              label: 'Todos',
+              selected: _group == 'todos',
+              onTap: () => setState(() => _group = 'todos'),
+            ),
+            for (final g in muscleGroups)
+              FilterChipButton(
+                label: g.label,
+                selected: _group == g.id,
+                onTap: () => setState(() => _group = g.id),
+              ),
           ],
         ),
         const SizedBox(height: 4),
@@ -213,7 +273,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
             children: [
-              if (toast != null) ...[ToastBanner(toast), const SizedBox(height: 8)],
+              if (toast != null) ...[
+                ToastBanner(toast),
+                const SizedBox(height: 8),
+              ],
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
@@ -239,8 +302,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 18),
                           child: Center(
                             widthFactor: 1,
-                            child: Text('Crear «${_search.text.trim()}»',
-                                style: AppText.body(15, weight: FontWeight.w700, color: AppColors.background)),
+                            child: Text(
+                              'Crear «${_search.text.trim()}»',
+                              style: AppText.body(
+                                15,
+                                weight: FontWeight.w700,
+                                color: AppColors.background,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -249,7 +318,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               for (final ex in list) ...[
                 if (draft != null)
-                  _PickRow(exercise: ex, picked: draft.contains(ex.id), highlighted: app.highlightId == ex.id, onTap: () => draft.toggle(ex))
+                  _PickRow(
+                    exercise: ex,
+                    picked: draft.contains(ex.id),
+                    highlighted: app.highlightId == ex.id,
+                    onTap: () => draft.toggle(ex),
+                  )
                 else
                   _LogRow(
                     exercise: ex,
@@ -270,7 +344,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
 }
 
 class _PickRow extends StatelessWidget {
-  const _PickRow({required this.exercise, required this.picked, required this.highlighted, required this.onTap});
+  const _PickRow({
+    required this.exercise,
+    required this.picked,
+    required this.highlighted,
+    required this.onTap,
+  });
   final Exercise exercise;
   final bool picked;
   final bool highlighted;
@@ -295,9 +374,19 @@ class _PickRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.name, style: AppText.body(17, weight: FontWeight.w600, height: 1.2)),
+                  Text(
+                    ex.name,
+                    style: AppText.body(
+                      17,
+                      weight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${groupLabel(ex.group)}${ex.custom ? ' · Creado por ti' : ''}', style: AppText.body(13, color: AppColors.textSecondary)),
+                  Text(
+                    '${groupLabel(ex.group)}${ex.custom ? ' · Creado por ti' : ''}',
+                    style: AppText.body(13, color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -308,10 +397,17 @@ class _PickRow extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: picked ? AppColors.accent : Colors.transparent,
-                border: Border.all(color: picked ? AppColors.accent : AppColors.handle, width: 1.5),
+                border: Border.all(
+                  color: picked ? AppColors.accent : AppColors.handle,
+                  width: 1.5,
+                ),
               ),
               child: Center(
-                child: AppIcon(picked ? AppIcons.check : AppIcons.plus, color: picked ? AppColors.background : AppColors.text, strokeWidth: picked ? 2.8 : 2.4),
+                child: AppIcon(
+                  picked ? AppIcons.check : AppIcons.plus,
+                  color: picked ? AppColors.background : AppColors.text,
+                  strokeWidth: picked ? 2.8 : 2.4,
+                ),
               ),
             ),
           ],
@@ -342,20 +438,28 @@ class _LogRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
     final ex = exercise;
-    final history = app.history(ex.id).where((s) => !s.date.isAfter(app.today)).toList();
+    final history = app
+        .history(ex.id)
+        .where((s) => !s.date.isAfter(app.today))
+        .toList();
     var info = 'Sin registros todavía';
     if (history.isNotEmpty) {
       final last = history.last.sets;
-      info = 'Última: ${last.length} × ${last.first.reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(last.first.kg ?? 0)} kg' : ''}';
+      info =
+          'Última: ${last.length} × ${last.first.reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(last.first.kg ?? 0)} kg' : ''}';
     }
     if (ex.custom) info = 'Creado por ti · $info';
-    final chip = inSession ? (setsToday > 0 ? '$setsToday series $dayWord' : 'En tu sesión') : groupLabel(ex.group);
+    final chip = inSession
+        ? (setsToday > 0 ? '$setsToday series $dayWord' : 'En tu sesión')
+        : groupLabel(ex.group);
 
     return Pressable(
       onTap: onTap,
       radius: 16,
       borderWidth: 1.5,
-      borderColor: highlighted ? AppColors.accent : (inSession ? AppColors.accentSoft(0.45) : AppColors.border),
+      borderColor: highlighted
+          ? AppColors.accent
+          : (inSession ? AppColors.accentSoft(0.45) : AppColors.border),
       padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
       semanticLabel: 'Registrar ${ex.name} $dayWord',
       child: ConstrainedBox(
@@ -366,9 +470,19 @@ class _LogRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.name, style: AppText.body(17, weight: FontWeight.w600, height: 1.2)),
+                  Text(
+                    ex.name,
+                    style: AppText.body(
+                      17,
+                      weight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(info, style: AppText.body(13, color: AppColors.textSecondary)),
+                  Text(
+                    info,
+                    style: AppText.body(13, color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -377,11 +491,25 @@ class _LogRow extends StatelessWidget {
               height: 28,
               padding: const EdgeInsets.symmetric(horizontal: 10),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: inSession ? AppColors.accent : AppColors.surfaceRaised, borderRadius: BorderRadius.circular(99)),
-              child: Text(chip, style: AppText.body(12, weight: FontWeight.w700, color: inSession ? AppColors.background : AppColors.textMuted)),
+              decoration: BoxDecoration(
+                color: inSession ? AppColors.accent : AppColors.surfaceRaised,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                chip,
+                style: AppText.body(
+                  12,
+                  weight: FontWeight.w700,
+                  color: inSession ? AppColors.background : AppColors.textMuted,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
-            const AppIcon(AppIcons.chevronRight, size: 18, color: AppColors.textFaint),
+            const AppIcon(
+              AppIcons.chevronRight,
+              size: 18,
+              color: AppColors.textFaint,
+            ),
           ],
         ),
       ),

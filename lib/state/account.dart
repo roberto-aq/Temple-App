@@ -4,7 +4,11 @@ import '../sync/sync_service.dart';
 
 /// La cuenta con sesión iniciada.
 class Account {
-  const Account({required this.email, required this.sync, required this.signOut});
+  const Account({
+    required this.email,
+    required this.sync,
+    required this.signOut,
+  });
 
   final String email;
   final SyncService sync;
@@ -19,8 +23,10 @@ class AccountScope extends InheritedWidget {
 
   final Account account;
 
-  static Account? maybeOf(BuildContext context) => context.dependOnInheritedWidgetOfExactType<AccountScope>()?.account;
+  static Account? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AccountScope>()?.account;
 
   @override
-  bool updateShouldNotify(AccountScope oldWidget) => oldWidget.account != account;
+  bool updateShouldNotify(AccountScope oldWidget) =>
+      oldWidget.account != account;
 }

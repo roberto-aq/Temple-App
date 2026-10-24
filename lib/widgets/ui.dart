@@ -40,10 +40,14 @@ class Pressable extends StatelessWidget {
   Widget build(BuildContext context) {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(radius),
-      side: borderColor == null ? BorderSide.none : BorderSide(color: borderColor!, width: borderWidth),
+      side: borderColor == null
+          ? BorderSide.none
+          : BorderSide(color: borderColor!, width: borderWidth),
     );
     Widget content = Padding(padding: padding, child: child);
-    if (alignment != null) content = Align(alignment: alignment!, child: content);
+    if (alignment != null) {
+      content = Align(alignment: alignment!, child: content);
+    }
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -65,7 +69,16 @@ class Pressable extends StatelessWidget {
 
 /// Botón principal: fondo acento y texto oscuro.
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, this.onTap, this.icon, this.trailingIcon, this.height = 58, this.fontSize = 17, this.radius = 16});
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    this.onTap,
+    this.icon,
+    this.trailingIcon,
+    this.height = 58,
+    this.fontSize = 17,
+    this.radius = 16,
+  });
 
   final String label;
   final VoidCallback? onTap;
@@ -164,7 +177,14 @@ class DashedAddButton extends StatelessWidget {
         radius: 16,
         height: 54,
         width: double.infinity,
-        child: _IconLabel(label: label, icon: AppIcons.plus, color: AppColors.accent, fontSize: 16, weight: FontWeight.w700, iconStroke: 2.6),
+        child: _IconLabel(
+          label: label,
+          icon: AppIcons.plus,
+          color: AppColors.accent,
+          fontSize: 16,
+          weight: FontWeight.w700,
+          iconStroke: 2.6,
+        ),
       ),
     );
   }
@@ -196,9 +216,21 @@ class _IconLabel extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (icon != null) ...[AppIcon(icon!, color: iconColor ?? color, strokeWidth: iconStroke), const SizedBox(width: 8)],
-        Flexible(child: Text(label, style: AppText.body(fontSize, weight: weight, color: color), overflow: TextOverflow.ellipsis)),
-        if (trailingIcon != null) ...[const SizedBox(width: 10), AppIcon(trailingIcon!, color: color, strokeWidth: 2.4)],
+        if (icon != null) ...[
+          AppIcon(icon!, color: iconColor ?? color, strokeWidth: iconStroke),
+          const SizedBox(width: 8),
+        ],
+        Flexible(
+          child: Text(
+            label,
+            style: AppText.body(fontSize, weight: weight, color: color),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (trailingIcon != null) ...[
+          const SizedBox(width: 10),
+          AppIcon(trailingIcon!, color: color, strokeWidth: 2.4),
+        ],
       ],
     );
   }
@@ -206,7 +238,12 @@ class _IconLabel extends StatelessWidget {
 
 /// Botón «‹ Volver» en forma de píldora.
 class BackPill extends StatelessWidget {
-  const BackPill({super.key, required this.label, required this.onTap, this.semanticLabel});
+  const BackPill({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.semanticLabel,
+  });
 
   final String label;
   final VoidCallback onTap;
@@ -270,7 +307,14 @@ class CircleIconButton extends StatelessWidget {
         width: size,
         height: size,
         semanticLabel: semanticLabel,
-        child: Center(child: AppIcon(icon, size: iconSize, color: iconColor, strokeWidth: 2.4)),
+        child: Center(
+          child: AppIcon(
+            icon,
+            size: iconSize,
+            color: iconColor,
+            strokeWidth: 2.4,
+          ),
+        ),
       ),
     );
   }
@@ -278,7 +322,12 @@ class CircleIconButton extends StatelessWidget {
 
 /// Píldora «+ Crear» / «+ Nueva» de las cabeceras.
 class HeaderActionPill extends StatelessWidget {
-  const HeaderActionPill({super.key, required this.label, required this.onTap, this.filled = false});
+  const HeaderActionPill({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+  });
 
   final String label;
   final VoidCallback onTap;
@@ -300,7 +349,10 @@ class HeaderActionPill extends StatelessWidget {
         children: [
           AppIcon(AppIcons.plus, size: 18, color: fg, strokeWidth: 2.8),
           const SizedBox(width: 6),
-          Text(label, style: AppText.body(15, weight: FontWeight.w700, color: fg)),
+          Text(
+            label,
+            style: AppText.body(15, weight: FontWeight.w700, color: fg),
+          ),
         ],
       ),
     );
@@ -343,7 +395,12 @@ class SurfaceCard extends StatelessWidget {
 
 /// Recuadro punteado para estados vacíos.
 class EmptyBox extends StatelessWidget {
-  const EmptyBox({super.key, required this.child, this.padding = const EdgeInsets.all(18), this.radius = 18});
+  const EmptyBox({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+    this.radius = 18,
+  });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -354,7 +411,10 @@ class EmptyBox extends StatelessWidget {
     return DashedBorder(
       color: AppColors.dashed,
       radius: radius,
-      child: Padding(padding: padding, child: SizedBox(width: double.infinity, child: child)),
+      child: Padding(
+        padding: padding,
+        child: SizedBox(width: double.infinity, child: child),
+      ),
     );
   }
 }
@@ -366,13 +426,22 @@ class EmptyText extends StatelessWidget {
   final TextAlign align;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text, textAlign: align, style: AppText.body(15, color: AppColors.textSecondary, height: 1.4));
+  Widget build(BuildContext context) => Text(
+    text,
+    textAlign: align,
+    style: AppText.body(15, color: AppColors.textSecondary, height: 1.4),
+  );
 }
 
 /// Dibuja un borde punteado redondeado alrededor del hijo.
 class DashedBorder extends StatelessWidget {
-  const DashedBorder({super.key, required this.child, required this.color, this.strokeWidth = 1, this.radius = 16});
+  const DashedBorder({
+    super.key,
+    required this.child,
+    required this.color,
+    this.strokeWidth = 1,
+    this.radius = 16,
+  });
 
   final Widget child;
   final Color color;
@@ -399,7 +468,12 @@ class _DashedRRectPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final inset = strokeWidth / 2;
     final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(inset, inset, size.width - strokeWidth, size.height - strokeWidth),
+      Rect.fromLTWH(
+        inset,
+        inset,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
       Radius.circular(radius),
     );
     final paint = Paint()
@@ -418,19 +492,32 @@ class _DashedRRectPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashedRRectPainter old) => old.color != color || old.strokeWidth != strokeWidth || old.radius != radius;
+  bool shouldRepaint(_DashedRRectPainter old) =>
+      old.color != color ||
+      old.strokeWidth != strokeWidth ||
+      old.radius != radius;
 }
 
 /// Etiqueta de sección en mayúsculas.
 class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key, this.color = AppColors.textSecondary, this.size = 12});
+  const SectionLabel(
+    this.text, {
+    super.key,
+    this.color = AppColors.textSecondary,
+    this.size = 12,
+  });
   final String text;
   final Color color;
   final double size;
 
   @override
-  Widget build(BuildContext context) =>
-      Semantics(header: true, child: Text(text.toUpperCase(), style: AppText.label(size: size, color: color)));
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Text(
+      text.toUpperCase(),
+      style: AppText.label(size: size, color: color),
+    ),
+  );
 }
 
 /// Título grande en Barlow Condensed y mayúsculas.
@@ -441,14 +528,20 @@ class ScreenTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        header: true,
-        child: Text(text.toUpperCase(), style: AppText.display(size, height: 1)),
-      );
+    header: true,
+    child: Text(text.toUpperCase(), style: AppText.display(size, height: 1)),
+  );
 }
 
 /// Chip de filtro (grupo muscular, tendencia).
 class FilterChipButton extends StatelessWidget {
-  const FilterChipButton({super.key, required this.label, required this.selected, required this.onTap, this.fontSize = 15});
+  const FilterChipButton({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.fontSize = 15,
+  });
 
   final String label;
   final bool selected;
@@ -468,7 +561,14 @@ class FilterChipButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Center(
         widthFactor: 1,
-        child: Text(label, style: AppText.body(fontSize, weight: FontWeight.w600, color: selected ? AppColors.background : AppColors.text)),
+        child: Text(
+          label,
+          style: AppText.body(
+            fontSize,
+            weight: FontWeight.w600,
+            color: selected ? AppColors.background : AppColors.text,
+          ),
+        ),
       ),
     );
   }
@@ -490,7 +590,10 @@ class ChipRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
-            for (var i = 0; i < children.length; i++) ...[if (i > 0) const SizedBox(width: 8), children[i]],
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              children[i],
+            ],
           ],
         ),
       ),
@@ -500,7 +603,11 @@ class ChipRow extends StatelessWidget {
 
 /// Barritas que cuentan series (18×5 px cada una).
 class SetPills extends StatelessWidget {
-  const SetPills({super.key, required this.count, this.alignment = WrapAlignment.start});
+  const SetPills({
+    super.key,
+    required this.count,
+    this.alignment = WrapAlignment.start,
+  });
   final int count;
   final WrapAlignment alignment;
 
@@ -513,7 +620,14 @@ class SetPills extends StatelessWidget {
         alignment: alignment,
         children: [
           for (var i = 0; i < count; i++)
-            Container(width: 18, height: 5, decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(99))),
+            Container(
+              width: 18,
+              height: 5,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
         ],
       ),
     );
@@ -522,7 +636,13 @@ class SetPills extends StatelessWidget {
 
 /// Insignia «RÉCORD».
 class RecordBadge extends StatelessWidget {
-  const RecordBadge({super.key, this.height = 22, this.fontSize = 11, this.label = 'RÉCORD', this.outlined = false});
+  const RecordBadge({
+    super.key,
+    this.height = 22,
+    this.fontSize = 11,
+    this.label = 'RÉCORD',
+    this.outlined = false,
+  });
   final double height;
   final double fontSize;
   final String label;
@@ -535,14 +655,21 @@ class RecordBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: outlined ? null : AppColors.accent,
-        border: outlined ? Border.all(color: AppColors.accent, width: 1.5) : null,
+        border: outlined
+            ? Border.all(color: AppColors.accent, width: 1.5)
+            : null,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Center(
         widthFactor: 1,
         child: Text(
           label,
-          style: AppText.body(fontSize, weight: FontWeight.w800, color: outlined ? AppColors.text : AppColors.background, letterSpacing: fontSize * 0.08),
+          style: AppText.body(
+            fontSize,
+            weight: FontWeight.w800,
+            color: outlined ? AppColors.text : AppColors.background,
+            letterSpacing: fontSize * 0.08,
+          ),
         ),
       ),
     );
@@ -567,9 +694,18 @@ class ToastBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const AppIcon(AppIcons.check, color: AppColors.accent, strokeWidth: 2.6),
+            const AppIcon(
+              AppIcons.check,
+              color: AppColors.accent,
+              strokeWidth: 2.6,
+            ),
             const SizedBox(width: 10),
-            Expanded(child: Text(message, style: AppText.body(15, weight: FontWeight.w600))),
+            Expanded(
+              child: Text(
+                message,
+                style: AppText.body(15, weight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
       ),
@@ -587,15 +723,33 @@ class GroupTag extends StatelessWidget {
     return Container(
       height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: AppColors.surfaceRaised, borderRadius: BorderRadius.circular(99)),
-      child: Center(widthFactor: 1, child: Text(label, style: AppText.body(13, weight: FontWeight.w600, color: AppColors.textMuted))),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Center(
+        widthFactor: 1,
+        child: Text(
+          label,
+          style: AppText.body(
+            13,
+            weight: FontWeight.w600,
+            color: AppColors.textMuted,
+          ),
+        ),
+      ),
     );
   }
 }
 
 /// Barra inferior fija con botón principal y error opcional (Crear rutina, Crear ejercicio).
 class BottomActionBar extends StatelessWidget {
-  const BottomActionBar({super.key, required this.label, required this.onTap, this.error});
+  const BottomActionBar({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.error,
+  });
   final String label;
   final VoidCallback onTap;
   final String? error;
@@ -607,18 +761,33 @@ class BottomActionBar extends StatelessWidget {
         color: AppColors.navBackground,
         border: Border(top: BorderSide(color: AppColors.line)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.paddingOf(context).bottom.clamp(12, 40)),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.paddingOf(context).bottom.clamp(12, 40),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (error != null) ...[
             Semantics(
               liveRegion: true,
-              child: Text(error!, textAlign: TextAlign.center, style: AppText.body(14, color: AppColors.error)),
+              child: Text(
+                error!,
+                textAlign: TextAlign.center,
+                style: AppText.body(14, color: AppColors.error),
+              ),
             ),
             const SizedBox(height: 10),
           ],
-          PrimaryButton(label: label, onTap: onTap, height: 60, fontSize: 19, radius: 18),
+          PrimaryButton(
+            label: label,
+            onTap: onTap,
+            height: 60,
+            fontSize: 19,
+            radius: 18,
+          ),
         ],
       ),
     );

@@ -23,11 +23,15 @@ const _uuid = Uuid();
 /// Todo cambio se aplica al instante en memoria y en la copia local ([AppStorage]),
 /// y se envía a Supabase a través de [SyncService] cuando hay conexión.
 class AppState extends ChangeNotifier {
-  AppState({required AppStorage storage, DateTime Function()? clock, SyncService? sync, List<Routine> routines = const []})
-      : _storage = storage,
-        _clock = clock ?? DateTime.now,
-        _sync = sync,
-        _routines = List.of(routines) {
+  AppState({
+    required AppStorage storage,
+    DateTime Function()? clock,
+    SyncService? sync,
+    List<Routine> routines = const [],
+  }) : _storage = storage,
+       _clock = clock ?? DateTime.now,
+       _sync = sync,
+       _routines = List.of(routines) {
     sync?.onSnapshot = applyRemote;
   }
 
@@ -49,16 +53,25 @@ class AppState extends ChangeNotifier {
     final raw = await _storage.load();
     if (raw == null) return;
     final j = jsonDecode(raw) as Map<String, dynamic>;
-    _custom = [for (final e in j['customExercises'] as List? ?? const []) Exercise.fromJson(e as Map<String, dynamic>)];
-    _routines = [for (final r in j['routines'] as List? ?? const []) Routine.fromJson(r as Map<String, dynamic>)];
+    _custom = [
+      for (final e in j['customExercises'] as List? ?? const [])
+        Exercise.fromJson(e as Map<String, dynamic>),
+    ];
+    _routines = [
+      for (final r in j['routines'] as List? ?? const [])
+        Routine.fromJson(r as Map<String, dynamic>),
+    ];
     _plans = {
-      for (final MapEntry(:key, :value) in (j['plans'] as Map<String, dynamic>? ?? const {}).entries)
+      for (final MapEntry(:key, :value)
+          in (j['plans'] as Map<String, dynamic>? ?? const {}).entries)
         key: DayPlan.fromJson(value as Map<String, dynamic>),
     };
     _logs = {
-      for (final MapEntry(key: day, value: byEx) in (j['logs'] as Map<String, dynamic>? ?? const {}).entries)
+      for (final MapEntry(key: day, value: byEx)
+          in (j['logs'] as Map<String, dynamic>? ?? const {}).entries)
         day: {
-          for (final MapEntry(key: ex, value: sets) in (byEx as Map<String, dynamic>).entries)
+          for (final MapEntry(key: ex, value: sets)
+              in (byEx as Map<String, dynamic>).entries)
             ex: [
               for (final s in sets as List)
                 () {
@@ -72,12 +85,17 @@ class AppState extends ChangeNotifier {
   }
 
   Map<String, dynamic> toJson() => {
-        'v': 2,
-        'customExercises': _custom.map((e) => e.toJson()).toList(),
-        'routines': _routines.map((r) => r.toJson()).toList(),
-        'plans': _plans.map((k, v) => MapEntry(k, v.toJson())),
-        'logs': _logs.map((k, v) => MapEntry(k, v.map((ex, sets) => MapEntry(ex, sets.map((s) => s.toJson()).toList())))),
-      };
+    'v': 2,
+    'customExercises': _custom.map((e) => e.toJson()).toList(),
+    'routines': _routines.map((r) => r.toJson()).toList(),
+    'plans': _plans.map((k, v) => MapEntry(k, v.toJson())),
+    'logs': _logs.map(
+      (k, v) => MapEntry(
+        k,
+        v.map((ex, sets) => MapEntry(ex, sets.map((s) => s.toJson()).toList())),
+      ),
+    ),
+  };
 
   void _commit() {
     notifyListeners();
@@ -92,9 +110,21 @@ class AppState extends ChangeNotifier {
 
   /// Reemplaza todo con lo descargado del servidor y vuelve a aplicar lo que aún no se sube.
   void applyRemote(Snapshot rows, List<Change> pending) {
-    _custom = [for (final r in rows[SyncTable.exercises] ?? const <Map<String, dynamic>>[]) exerciseFromRow(r)];
-    _routines = [for (final r in rows[SyncTable.routines] ?? const <Map<String, dynamic>>[]) routineFromRow(r)];
-    _plans = {for (final r in rows[SyncTable.dayPlans] ?? const <Map<String, dynamic>>[]) dayKey(parseDayKey(r['day'] as String)): dayPlanFromRow(r)};
+    _custom = [
+      for (final r
+          in rows[SyncTable.exercises] ?? const <Map<String, dynamic>>[])
+        exerciseFromRow(r),
+    ];
+    _routines = [
+      for (final r
+          in rows[SyncTable.routines] ?? const <Map<String, dynamic>>[])
+        routineFromRow(r),
+    ];
+    _plans = {
+      for (final r
+          in rows[SyncTable.dayPlans] ?? const <Map<String, dynamic>>[])
+        dayKey(parseDayKey(r['day'] as String)): dayPlanFromRow(r),
+    };
     _logs = {};
     for (final r in rows[SyncTable.sets] ?? const <Map<String, dynamic>>[]) {
       final s = setFromRow(r);
@@ -153,7 +183,10 @@ class AppState extends ChangeNotifier {
   void _insertSet(String day, String exId, SetEntry s) {
     final list = _logs.putIfAbsent(day, () => {}).putIfAbsent(exId, () => []);
     var i = list.length;
-    while (i > 0 && s.time != null && list[i - 1].time != null && list[i - 1].time!.isAfter(s.time!)) {
+    while (i > 0 &&
+        s.time != null &&
+        list[i - 1].time != null &&
+        list[i - 1].time!.isAfter(s.time!)) {
       i--;
     }
     list.insert(i, s);
@@ -184,7 +217,8 @@ class AppState extends ChangeNotifier {
   Timer? _toastTimer;
 
   /// El aviso vigente, si va dirigido a esa pantalla.
-  String? toastFor(ToastTarget target) => _toastTarget == target ? _toast : null;
+  String? toastFor(ToastTarget target) =>
+      _toastTarget == target ? _toast : null;
   String? get highlightId => _highlightId;
 
   void flash(String message, ToastTarget target, {String? highlightId}) {
@@ -223,7 +257,8 @@ class AppState extends ChangeNotifier {
   bool isToday(DateTime d) => daysBetween(d, today) == 0;
 
   /// «hoy» o «el martes».
-  String dayWord(DateTime d) => isToday(d) ? 'hoy' : 'el ${weekdaysLong[d.weekday - 1].toLowerCase()}';
+  String dayWord(DateTime d) =>
+      isToday(d) ? 'hoy' : 'el ${weekdaysLong[d.weekday - 1].toLowerCase()}';
 
   void selectDay(DateTime d) {
     if (dateOnly(d).isAfter(today)) return;
@@ -253,8 +288,18 @@ class AppState extends ChangeNotifier {
     return exercises.any((e) => normalize(e.name) == n);
   }
 
-  Exercise createExercise({required String name, required String group, required ExerciseKind kind}) {
-    final ex = Exercise(id: _uuid.v4(), name: name.trim(), group: group, kind: kind, custom: true);
+  Exercise createExercise({
+    required String name,
+    required String group,
+    required ExerciseKind kind,
+  }) {
+    final ex = Exercise(
+      id: _uuid.v4(),
+      name: name.trim(),
+      group: group,
+      kind: kind,
+      custom: true,
+    );
     _write(Change(SyncTable.exercises, ex.id, exerciseRow(ex)));
     _commit();
     return ex;
@@ -270,9 +315,19 @@ class AppState extends ChangeNotifier {
   }
 
   /// Crea o actualiza una rutina. Devuelve su id.
-  String saveRoutine({String? id, required String name, required List<RoutineItem> items}) {
+  String saveRoutine({
+    String? id,
+    required String name,
+    required List<RoutineItem> items,
+  }) {
     if (id == null || routine(id) == null) id = _uuid.v4();
-    _write(Change(SyncTable.routines, id, routineRow(Routine(id: id, name: name.trim(), items: List.of(items)))));
+    _write(
+      Change(
+        SyncTable.routines,
+        id,
+        routineRow(Routine(id: id, name: name.trim(), items: List.of(items))),
+      ),
+    );
     _commit();
     return id;
   }
@@ -317,9 +372,11 @@ class AppState extends ChangeNotifier {
 
   DayPlan plan(DateTime d) => _plans[dayKey(d)] ?? DayPlan();
 
-  Map<String, List<SetEntry>> logsOn(DateTime d) => _logs[dayKey(d)] ?? const {};
+  Map<String, List<SetEntry>> logsOn(DateTime d) =>
+      _logs[dayKey(d)] ?? const {};
 
-  List<SetEntry> setsOn(DateTime d, String exId) => List.unmodifiable(logsOn(d)[exId] ?? const <SetEntry>[]);
+  List<SetEntry> setsOn(DateTime d, String exId) =>
+      List.unmodifiable(logsOn(d)[exId] ?? const <SetEntry>[]);
 
   /// Ejercicios de la sesión del día: los planeados en orden, luego los registrados fuera del plan.
   List<String> sessionExercises(DateTime d) {
@@ -328,7 +385,9 @@ class AppState extends ChangeNotifier {
       if (!out.contains(id) && exercise(id) != null) out.add(id);
     }
     for (final MapEntry(:key, :value) in logsOn(d).entries) {
-      if (value.isNotEmpty && !out.contains(key) && exercise(key) != null) out.add(key);
+      if (value.isNotEmpty && !out.contains(key) && exercise(key) != null) {
+        out.add(key);
+      }
     }
     return out;
   }
@@ -337,7 +396,10 @@ class AppState extends ChangeNotifier {
 
   /// Días con al menos una serie, del más reciente al más antiguo.
   List<DateTime> get trainedDays {
-    final days = [for (final MapEntry(:key, :value) in _logs.entries) if (value.values.any((s) => s.isNotEmpty)) parseDayKey(key)];
+    final days = [
+      for (final MapEntry(:key, :value) in _logs.entries)
+        if (value.values.any((s) => s.isNotEmpty)) parseDayKey(key),
+    ];
     days.sort((a, b) => b.compareTo(a));
     return days;
   }
@@ -346,7 +408,10 @@ class AppState extends ChangeNotifier {
   void _updatePlan(DateTime d, void Function(DayPlan p) fn) {
     final key = dayKey(d);
     final old = _plans[key];
-    final p = DayPlan(routineIds: List.of(old?.routineIds ?? const []), exerciseIds: List.of(old?.exerciseIds ?? const []));
+    final p = DayPlan(
+      routineIds: List.of(old?.routineIds ?? const []),
+      exerciseIds: List.of(old?.exerciseIds ?? const []),
+    );
     fn(p);
     final empty = p.exerciseIds.isEmpty && p.routineIds.isEmpty;
     if (empty && old == null) return;
@@ -373,7 +438,9 @@ class AppState extends ChangeNotifier {
     if (r == null) return;
     _updatePlan(d, (p) {
       for (final it in r.items) {
-        if (!p.exerciseIds.contains(it.exerciseId)) p.exerciseIds.add(it.exerciseId);
+        if (!p.exerciseIds.contains(it.exerciseId)) {
+          p.exerciseIds.add(it.exerciseId);
+        }
       }
       if (!p.routineIds.contains(routineId)) p.routineIds.add(routineId);
     });
@@ -388,7 +455,9 @@ class AppState extends ChangeNotifier {
         if (!p.exerciseIds.contains(id)) p.exerciseIds.add(id);
       }
       for (final id in routineIds) {
-        if (!p.routineIds.contains(id) && routine(id) != null) p.routineIds.add(id);
+        if (!p.routineIds.contains(id) && routine(id) != null) {
+          p.routineIds.add(id);
+        }
       }
     });
     _selectedDay = today;
@@ -403,7 +472,10 @@ class AppState extends ChangeNotifier {
 
   /// Minutos desde la primera a la última serie del día (o hasta ahora si sigues entrenando).
   int sessionMinutes(DateTime d) {
-    final times = [for (final sets in logsOn(d).values) for (final s in sets) ?s.time];
+    final times = [
+      for (final sets in logsOn(d).values)
+        for (final s in sets) ?s.time,
+    ];
     if (times.isEmpty) return 0;
     times.sort();
     final t0 = times.first, t1 = times.last;
@@ -418,7 +490,12 @@ class AppState extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   void addSet(DateTime d, String exId, SetEntry entry) {
-    final s = SetEntry(id: _uuid.v4(), reps: entry.reps, kg: entry.kg, time: entry.time ?? now);
+    final s = SetEntry(
+      id: _uuid.v4(),
+      reps: entry.reps,
+      kg: entry.kg,
+      time: entry.time ?? now,
+    );
     _write(Change(SyncTable.sets, s.id!, setRow(dayKey(d), exId, s)));
     _commit();
   }
@@ -428,7 +505,12 @@ class AppState extends ChangeNotifier {
     final sets = _logs[dayKey(d)]?[exId];
     if (sets == null || index >= sets.length) return;
     final old = sets[index];
-    final s = SetEntry(id: old.id, reps: entry.reps, kg: entry.kg, time: old.time ?? now);
+    final s = SetEntry(
+      id: old.id,
+      reps: entry.reps,
+      kg: entry.kg,
+      time: old.time ?? now,
+    );
     _write(Change(SyncTable.sets, s.id!, setRow(dayKey(d), exId, s)));
     _commit();
   }
@@ -449,7 +531,9 @@ class AppState extends ChangeNotifier {
     final out = <ExerciseSession>[];
     for (final MapEntry(:key, :value) in _logs.entries) {
       final sets = value[exId];
-      if (sets != null && sets.isNotEmpty) out.add(ExerciseSession(parseDayKey(key), List.unmodifiable(sets)));
+      if (sets != null && sets.isNotEmpty) {
+        out.add(ExerciseSession(parseDayKey(key), List.unmodifiable(sets)));
+      }
     }
     out.sort((a, b) => a.date.compareTo(b.date));
     return out;
@@ -478,15 +562,19 @@ class AppState extends ChangeNotifier {
     return prior > 0 && bestScore(ex, sets) > prior + 1e-9;
   }
 
-  ExerciseAnalysis analyze(Exercise ex) => ExerciseAnalysis(ex, history(ex.id), today);
+  ExerciseAnalysis analyze(Exercise ex) =>
+      ExerciseAnalysis(ex, history(ex.id), today);
 }
 
 /// Da acceso al [AppState] y redibuja a quien lo lee cuando cambia.
 class AppScope extends InheritedNotifier<AppState> {
-  const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
+  const AppScope({super.key, required AppState state, required super.child})
+    : super(notifier: state);
 
-  static AppState of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
+  static AppState of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
 
   /// Sin suscribirse: para callbacks.
-  static AppState read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
+  static AppState read(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
 }

@@ -9,7 +9,12 @@ import '../widgets/ui.dart';
 
 /// 6 · Crear ejercicio. Devuelve el [Exercise] creado al cerrar.
 class NewExerciseScreen extends StatefulWidget {
-  const NewExerciseScreen({super.key, this.initialName = '', this.initialGroup, this.saveLabel = 'Guardar ejercicio'});
+  const NewExerciseScreen({
+    super.key,
+    this.initialName = '',
+    this.initialGroup,
+    this.saveLabel = 'Guardar ejercicio',
+  });
 
   final String initialName;
   final String? initialGroup;
@@ -27,8 +32,16 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
 
   static const _kinds = [
     (ExerciseKind.weight, 'Repeticiones y peso', 'Ej. press, sentadilla, curl'),
-    (ExerciseKind.reps, 'Solo repeticiones', 'Ej. dominadas, flexiones, fondos'),
-    (ExerciseKind.seconds, 'Tiempo (segundos)', 'Ej. plancha, sentadilla isométrica'),
+    (
+      ExerciseKind.reps,
+      'Solo repeticiones',
+      'Ej. dominadas, flexiones, fondos',
+    ),
+    (
+      ExerciseKind.seconds,
+      'Tiempo (segundos)',
+      'Ej. plancha, sentadilla isométrica',
+    ),
   ];
 
   @override
@@ -52,7 +65,10 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
       setState(() => _error = error);
       return;
     }
-    Navigator.pop(context, app.createExercise(name: name, group: _group!, kind: _kind));
+    Navigator.pop(
+      context,
+      app.createExercise(name: name, group: _group!, kind: _kind),
+    );
   }
 
   @override
@@ -68,7 +84,10 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackPill(label: 'Cancelar', onTap: () => Navigator.pop(context)),
+                  BackPill(
+                    label: 'Cancelar',
+                    onTap: () => Navigator.pop(context),
+                  ),
                   const SectionLabel('Nuevo ejercicio', size: 13),
                 ],
               ),
@@ -106,12 +125,22 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                           radius: 14,
                           borderWidth: 1.5,
                           selected: _group == g.id,
-                          color: _group == g.id ? AppColors.accent : AppColors.surface,
-                          borderColor: _group == g.id ? AppColors.accent : AppColors.borderStrong,
+                          color: _group == g.id
+                              ? AppColors.accent
+                              : AppColors.surface,
+                          borderColor: _group == g.id
+                              ? AppColors.accent
+                              : AppColors.borderStrong,
                           child: Center(
                             child: Text(
                               g.label,
-                              style: AppText.body(15, weight: FontWeight.w600, color: _group == g.id ? AppColors.background : AppColors.text),
+                              style: AppText.body(
+                                15,
+                                weight: FontWeight.w600,
+                                color: _group == g.id
+                                    ? AppColors.background
+                                    : AppColors.text,
+                              ),
                             ),
                           ),
                         ),
@@ -135,7 +164,11 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                 ],
               ),
             ),
-            BottomActionBar(label: widget.saveLabel, onTap: _save, error: _error),
+            BottomActionBar(
+              label: widget.saveLabel,
+              onTap: _save,
+              error: _error,
+            ),
           ],
         ),
       ),
@@ -144,7 +177,12 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
 }
 
 class _KindOption extends StatelessWidget {
-  const _KindOption({required this.title, required this.subtitle, required this.selected, required this.onTap});
+  const _KindOption({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
   final String title;
   final String subtitle;
   final bool selected;
@@ -169,13 +207,19 @@ class _KindOption extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: selected ? AppColors.accent : AppColors.ring, width: 2),
+                border: Border.all(
+                  color: selected ? AppColors.accent : AppColors.ring,
+                  width: 2,
+                ),
               ),
               child: Center(
                 child: Container(
                   width: 10,
                   height: 10,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: selected ? AppColors.accent : Colors.transparent),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? AppColors.accent : Colors.transparent,
+                  ),
                 ),
               ),
             ),
@@ -186,7 +230,10 @@ class _KindOption extends StatelessWidget {
                 children: [
                   Text(title, style: AppText.body(16, weight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AppText.body(13, color: AppColors.textSecondary)),
+                  Text(
+                    subtitle,
+                    style: AppText.body(13, color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -199,7 +246,14 @@ class _KindOption extends StatelessWidget {
 
 /// Campo de nombre grande (Barlow Condensed 30) de los formularios.
 class BigTextField extends StatelessWidget {
-  const BigTextField({super.key, required this.controller, required this.hint, this.error = false, this.onChanged, this.autofocus = false});
+  const BigTextField({
+    super.key,
+    required this.controller,
+    required this.hint,
+    this.error = false,
+    this.onChanged,
+    this.autofocus = false,
+  });
 
   final TextEditingController controller;
   final String hint;
@@ -209,8 +263,10 @@ class BigTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    OutlineInputBorder border(Color c) =>
-        OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: c, width: 1.5));
+    OutlineInputBorder border(Color c) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: c, width: 1.5),
+    );
     return TextField(
       controller: controller,
       onChanged: onChanged,
@@ -221,12 +277,21 @@ class BigTextField extends StatelessWidget {
       style: AppText.display(30, weight: FontWeight.w700),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppText.display(30, weight: FontWeight.w700, color: AppColors.textDisabled),
+        hintStyle: AppText.display(
+          30,
+          weight: FontWeight.w700,
+          color: AppColors.textDisabled,
+        ),
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         enabledBorder: border(error ? AppColors.error : AppColors.borderStrong),
-        focusedBorder: border(error ? AppColors.error : AppColors.textSecondary),
+        focusedBorder: border(
+          error ? AppColors.error : AppColors.textSecondary,
+        ),
       ),
     );
   }

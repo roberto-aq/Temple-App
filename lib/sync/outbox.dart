@@ -16,7 +16,8 @@ enum SyncTable {
   /// Columna que identifica la fila dentro de la cuenta.
   final String keyColumn;
 
-  static SyncTable byName(String table) => values.firstWhere((t) => t.table == table);
+  static SyncTable byName(String table) =>
+      values.firstWhere((t) => t.table == table);
 }
 
 /// Un cambio local: la fila completa tal como debe quedar, o `null` si se borró.
@@ -32,14 +33,19 @@ class Change {
 
   bool get isDelete => row == null;
 
-  Map<String, dynamic> toJson() => {'seq': seq, 't': table.table, 'k': key, 'r': row};
+  Map<String, dynamic> toJson() => {
+    'seq': seq,
+    't': table.table,
+    'k': key,
+    'r': row,
+  };
 
   factory Change.fromJson(Map<String, dynamic> j) => Change(
-        SyncTable.byName(j['t'] as String),
-        j['k'] as String,
-        j['r'] as Map<String, dynamic>?,
-        seq: (j['seq'] as num).toInt(),
-      );
+    SyncTable.byName(j['t'] as String),
+    j['k'] as String,
+    j['r'] as Map<String, dynamic>?,
+    seq: (j['seq'] as num).toInt(),
+  );
 }
 
 /// Cola de cambios pendientes de subir, guardada en el teléfono.
@@ -59,7 +65,10 @@ class Outbox {
     if (raw == null) return;
     _items
       ..clear()
-      ..addAll([for (final c in jsonDecode(raw) as List) Change.fromJson(c as Map<String, dynamic>)]);
+      ..addAll([
+        for (final c in jsonDecode(raw) as List)
+          Change.fromJson(c as Map<String, dynamic>),
+      ]);
     for (final c in _items) {
       if (c.seq > _seq) _seq = c.seq;
     }
@@ -79,5 +88,6 @@ class Outbox {
     _save();
   }
 
-  void _save() => _storage.save(jsonEncode([for (final c in _items) c.toJson()]));
+  void _save() =>
+      _storage.save(jsonEncode([for (final c in _items) c.toJson()]));
 }

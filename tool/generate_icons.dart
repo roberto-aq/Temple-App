@@ -51,11 +51,19 @@ ui.Path _logo() {
 }
 
 /// Dibuja el logo centrado (por su contorno real) con [logoSize] px por viewBox.
-Future<void> _write(String path, {required double logoSize, required ui.Color color, ui.Color? background}) async {
+Future<void> _write(
+  String path, {
+  required double logoSize,
+  required ui.Color color,
+  ui.Color? background,
+}) async {
   final recorder = ui.PictureRecorder();
   final canvas = ui.Canvas(recorder);
   if (background != null) {
-    canvas.drawRect(const ui.Rect.fromLTWH(0, 0, _size, _size), ui.Paint()..color = background);
+    canvas.drawRect(
+      const ui.Rect.fromLTWH(0, 0, _size, _size),
+      ui.Paint()..color = background,
+    );
   }
   final logo = _logo();
   final bounds = logo.getBounds();
@@ -64,8 +72,16 @@ Future<void> _write(String path, {required double logoSize, required ui.Color co
     ..translate(_size / 2, _size / 2)
     ..scale(scale)
     ..translate(-bounds.center.dx, -bounds.center.dy)
-    ..drawPath(logo, ui.Paint()..color = color..isAntiAlias = true);
-  final image = await recorder.endRecording().toImage(_size.toInt(), _size.toInt());
+    ..drawPath(
+      logo,
+      ui.Paint()
+        ..color = color
+        ..isAntiAlias = true,
+    );
+  final image = await recorder.endRecording().toImage(
+    _size.toInt(),
+    _size.toInt(),
+  );
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   File(path)
     ..createSync(recursive: true)
@@ -76,11 +92,24 @@ void main() {
   test('genera assets/icon', () async {
     await TestWidgetsFlutterBinding.ensureInitialized().runAsync(() async {
       // Ícono completo (iOS, web, Windows, Android antiguo).
-      await _write('assets/icon/icon.png', logoSize: _size * 0.64, color: _accent, background: _surface);
+      await _write(
+        'assets/icon/icon.png',
+        logoSize: _size * 0.64,
+        color: _accent,
+        background: _surface,
+      );
       // Android adaptativo: flutter_launcher_icons ya añade un inset del 16 %,
       // así que la capa usa la misma proporción que el ícono completo.
-      await _write('assets/icon/icon_foreground.png', logoSize: _size * 0.64, color: _accent);
-      await _write('assets/icon/icon_monochrome.png', logoSize: _size * 0.64, color: _white);
+      await _write(
+        'assets/icon/icon_foreground.png',
+        logoSize: _size * 0.64,
+        color: _accent,
+      );
+      await _write(
+        'assets/icon/icon_monochrome.png',
+        logoSize: _size * 0.64,
+        color: _white,
+      );
     });
   });
 }

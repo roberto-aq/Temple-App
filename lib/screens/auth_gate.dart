@@ -55,7 +55,11 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     final user = _user;
     if (user == null) return templeMaterialApp(home: const AuthScreen());
-    return _AccountView(key: ValueKey(user.id), user: user, prefs: widget.prefs);
+    return _AccountView(
+      key: ValueKey(user.id),
+      user: user,
+      prefs: widget.prefs,
+    );
   }
 }
 
@@ -85,8 +89,15 @@ class _AccountViewState extends State<_AccountView> {
       backend: SupabaseBackend(Supabase.instance.client, id),
       storage: PrefsStorage.outbox(widget.prefs, id),
     );
-    _state = AppState(storage: PrefsStorage.cache(widget.prefs, id), sync: _sync);
-    _account = Account(email: widget.user.email ?? '', sync: _sync, signOut: _signOut);
+    _state = AppState(
+      storage: PrefsStorage.cache(widget.prefs, id),
+      sync: _sync,
+    );
+    _account = Account(
+      email: widget.user.email ?? '',
+      sync: _sync,
+      signOut: _signOut,
+    );
     _ready = _open();
     _lifecycle = AppLifecycleListener(
       onResume: () => _sync.refresh(),

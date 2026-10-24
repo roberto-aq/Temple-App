@@ -14,7 +14,12 @@ import 'new_exercise_screen.dart';
 
 /// 4 · Crear / editar rutina.
 class RoutineEditorScreen extends StatefulWidget {
-  const RoutineEditorScreen({super.key, this.routine, this.initialItems, this.returnToRoutines = false});
+  const RoutineEditorScreen({
+    super.key,
+    this.routine,
+    this.initialItems,
+    this.returnToRoutines = false,
+  });
 
   /// La rutina a editar; null para crear una nueva.
   final Routine? routine;
@@ -55,14 +60,21 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
     final editing = _draft.id != null;
     final id = app.saveRoutine(id: _draft.id, name: name, items: _draft.items);
     app.flash(
-      editing ? 'Cambios guardados en «$name».' : '«$name» guardada. Cárgala cuando quieras desde Hoy.',
+      editing
+          ? 'Cambios guardados en «$name».'
+          : '«$name» guardada. Cárgala cuando quieras desde Hoy.',
       ToastTarget.routines,
       highlightId: id,
     );
     goToTab(context, AppTab.rutinas);
   }
 
-  Widget _buildItem(AppState app, List<RoutineItem> items, int i, {double? dragLift}) {
+  Widget _buildItem(
+    AppState app,
+    List<RoutineItem> items,
+    int i, {
+    double? dragLift,
+  }) {
     final ex = app.exercise(items[i].exerciseId);
     return _DraftItem(
       index: i,
@@ -92,8 +104,14 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      BackPill(label: 'Cancelar', onTap: () => Navigator.pop(context)),
-                      SectionLabel(_draft.id != null ? 'Editar rutina' : 'Nueva rutina', size: 13),
+                      BackPill(
+                        label: 'Cancelar',
+                        onTap: () => Navigator.pop(context),
+                      ),
+                      SectionLabel(
+                        _draft.id != null ? 'Editar rutina' : 'Nueva rutina',
+                        size: 13,
+                      ),
                     ],
                   ),
                 ),
@@ -114,7 +132,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                                 error: _saveError && _name.text.trim().isEmpty,
                                 onChanged: (v) {
                                   _draft.name = v;
-                                  if (_saveError) setState(() => _saveError = false);
+                                  if (_saveError) {
+                                    setState(() => _saveError = false);
+                                  }
                                 },
                               ),
                               const SizedBox(height: 18),
@@ -123,7 +143,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                               if (items.isEmpty) ...[
                                 const EmptyBox(
                                   padding: EdgeInsets.all(22),
-                                  child: EmptyText('Todavía no hay ejercicios. Agrégalos desde la biblioteca.'),
+                                  child: EmptyText(
+                                    'Todavía no hay ejercicios. Agrégalos desde la biblioteca.',
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                               ],
@@ -135,14 +157,21 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         sliver: SliverReorderableList(
                           itemCount: items.length,
-                          onReorder: (from, to) => _draft.move(from, to > from ? to - 1 : to),
-                          proxyDecorator: (child, i, animation) => AnimatedBuilder(
-                            animation: animation,
-                            builder: (context, _) => Material(
-                              color: Colors.transparent,
-                              child: _buildItem(app, items, i, dragLift: animation.value),
-                            ),
-                          ),
+                          onReorder: (from, to) =>
+                              _draft.move(from, to > from ? to - 1 : to),
+                          proxyDecorator: (child, i, animation) =>
+                              AnimatedBuilder(
+                                animation: animation,
+                                builder: (context, _) => Material(
+                                  color: Colors.transparent,
+                                  child: _buildItem(
+                                    app,
+                                    items,
+                                    i,
+                                    dragLift: animation.value,
+                                  ),
+                                ),
+                              ),
                           itemBuilder: (context, i) => Padding(
                             key: ValueKey(items[i].exerciseId),
                             padding: const EdgeInsets.only(bottom: 10),
@@ -155,7 +184,13 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                         sliver: SliverToBoxAdapter(
                           child: DashedAddButton(
                             label: 'Agregar ejercicios',
-                            onTap: () => pushScreen(context, LibraryScreen(mode: LibraryMode.draft, draft: _draft)),
+                            onTap: () => pushScreen(
+                              context,
+                              LibraryScreen(
+                                mode: LibraryMode.draft,
+                                draft: _draft,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -165,7 +200,9 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                 BottomActionBar(
                   label: 'Guardar rutina',
                   onTap: _save,
-                  error: _saveError ? 'Ponle un nombre y agrega al menos un ejercicio.' : null,
+                  error: _saveError
+                      ? 'Ponle un nombre y agrega al menos un ejercicio.'
+                      : null,
                 ),
               ],
             );
@@ -206,18 +243,31 @@ class _DraftItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: dragging ? AppColors.surfaceDragged : AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: dragging ? AppColors.accent : AppColors.border),
+        border: Border.all(
+          color: dragging ? AppColors.accent : AppColors.border,
+        ),
         boxShadow: dragging
-            ? [BoxShadow(color: Colors.black.withValues(alpha: 0.55 * dragLift!), blurRadius: 30, offset: const Offset(0, 14))]
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.55 * dragLift!),
+                  blurRadius: 30,
+                  offset: const Offset(0, 14),
+                ),
+              ]
             : null,
       ),
       child: Row(
         children: [
           Semantics(
-            label: 'Mover $name, posición ${index + 1} de $count. Mantén presionado y arrastra',
+            label:
+                'Mover $name, posición ${index + 1} de $count. Mantén presionado y arrastra',
             customSemanticsActions: {
-              if (index > 0) const CustomSemanticsAction(label: 'Subir'): () => onMove(index - 1),
-              if (index < count - 1) const CustomSemanticsAction(label: 'Bajar'): () => onMove(index + 1),
+              if (index > 0)
+                const CustomSemanticsAction(label: 'Subir'): () =>
+                    onMove(index - 1),
+              if (index < count - 1)
+                const CustomSemanticsAction(label: 'Bajar'): () =>
+                    onMove(index + 1),
             },
             child: ReorderableDragStartListener(
               index: index,
@@ -226,7 +276,16 @@ class _DraftItem extends StatelessWidget {
                 child: SizedBox(
                   width: 44,
                   height: 44,
-                  child: Center(child: AppIcon(AppIcons.dragHandle, size: 22, color: dragging ? AppColors.accent : AppColors.textSecondary, strokeWidth: 2.4)),
+                  child: Center(
+                    child: AppIcon(
+                      AppIcons.dragHandle,
+                      size: 22,
+                      color: dragging
+                          ? AppColors.accent
+                          : AppColors.textSecondary,
+                      strokeWidth: 2.4,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -234,7 +293,10 @@ class _DraftItem extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 30,
-            child: Text((index + 1).toString().padLeft(2, '0'), style: AppText.display(26, color: AppColors.accent)),
+            child: Text(
+              (index + 1).toString().padLeft(2, '0'),
+              style: AppText.display(26, color: AppColors.accent),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -242,8 +304,16 @@ class _DraftItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.body(17, weight: FontWeight.w600, height: 1.2)),
-                Text(group, style: AppText.body(13, color: AppColors.textSecondary)),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.body(17, weight: FontWeight.w600, height: 1.2),
+                ),
+                Text(
+                  group,
+                  style: AppText.body(13, color: AppColors.textSecondary),
+                ),
               ],
             ),
           ),

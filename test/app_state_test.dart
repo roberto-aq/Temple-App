@@ -11,8 +11,11 @@ final fixedNow = DateTime(2026, 10, 23, 18);
 final today = DateTime(2026, 10, 23);
 final monday = DateTime(2026, 10, 19);
 
-AppState newState([MemoryStorage? storage]) =>
-    AppState(storage: storage ?? MemoryStorage(), clock: () => fixedNow, routines: starterRoutines);
+AppState newState([MemoryStorage? storage]) => AppState(
+  storage: storage ?? MemoryStorage(),
+  clock: () => fixedNow,
+  routines: starterRoutines,
+);
 
 void main() {
   test('arranca con las 5 rutinas y la biblioteca base', () {
@@ -35,7 +38,12 @@ void main() {
   test('cargar rutina, nombre de sesión y quitar ejercicios', () {
     final app = newState();
     app.loadRoutine('r1', today);
-    expect(app.sessionExercises(today), ['press-banca', 'flexiones', 'aperturas', 'fondos']);
+    expect(app.sessionExercises(today), [
+      'press-banca',
+      'flexiones',
+      'aperturas',
+      'fondos',
+    ]);
     expect(app.sessionName(today), 'Pecho y tríceps');
 
     app.loadRoutine('r4', today);
@@ -76,31 +84,61 @@ void main() {
     app.addSet(monday, ex.id, const SetEntry(reps: 8, kg: 60));
     app.addSet(today, ex.id, const SetEntry(reps: 8, kg: 62.5));
 
-    expect(app.history(ex.id).map((s) => s.date), [DateTime(2026, 10, 5), monday, today]);
+    expect(app.history(ex.id).map((s) => s.date), [
+      DateTime(2026, 10, 5),
+      monday,
+      today,
+    ]);
     expect(app.previousSession(ex.id, today)!.date, monday);
     expect(app.previousSession(ex.id, DateTime(2026, 10, 5)), isNull);
     expect(app.isRecordOn(ex, today), isTrue);
-    expect(app.isRecordOn(ex, DateTime(2026, 10, 5)), isFalse, reason: 'la primera sesión nunca es récord');
+    expect(
+      app.isRecordOn(ex, DateTime(2026, 10, 5)),
+      isFalse,
+      reason: 'la primera sesión nunca es récord',
+    );
     expect(app.trainedDays.first, today);
     expect(app.analyze(ex).trend, Trend.up);
   });
 
   test('duración de la sesión desde la primera serie', () {
     final app = newState();
-    app.addSet(today, 'sentadilla', SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 23, 17, 20)));
-    app.addSet(today, 'sentadilla', SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 23, 17, 50)));
+    app.addSet(
+      today,
+      'sentadilla',
+      SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 23, 17, 20)),
+    );
+    app.addSet(
+      today,
+      'sentadilla',
+      SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 23, 17, 50)),
+    );
     // La última serie fue hace 10 minutos: sigue entrenando, cuenta hasta ahora.
     expect(app.sessionMinutes(today), 40);
-    app.addSet(monday, 'sentadilla', SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 19, 18)));
+    app.addSet(
+      monday,
+      'sentadilla',
+      SetEntry(reps: 8, kg: 80, time: DateTime(2026, 10, 19, 18)),
+    );
     expect(app.sessionMinutes(monday), 1);
   });
 
   test('crear, editar y borrar rutinas; orden por uso reciente', () {
     final app = newState();
-    final id = app.saveRoutine(name: '  Brazos express ', items: const [RoutineItem(exerciseId: 'curl')]);
+    final id = app.saveRoutine(
+      name: '  Brazos express ',
+      items: const [RoutineItem(exerciseId: 'curl')],
+    );
     expect(app.routine(id)!.name, 'Brazos express');
 
-    app.saveRoutine(id: id, name: 'Brazos', items: const [RoutineItem(exerciseId: 'curl'), RoutineItem(exerciseId: 'press-frances')]);
+    app.saveRoutine(
+      id: id,
+      name: 'Brazos',
+      items: const [
+        RoutineItem(exerciseId: 'curl'),
+        RoutineItem(exerciseId: 'press-frances'),
+      ],
+    );
     expect(app.routine(id)!.items, hasLength(2));
     expect(app.routines, hasLength(6));
 
@@ -112,13 +150,20 @@ void main() {
 
     app.deleteRoutine(id);
     expect(app.routine(id), isNull);
-    expect(app.sessionName(today), 'Entrenamiento', reason: 'una rutina borrada no da nombre a la sesión');
+    expect(
+      app.sessionName(today),
+      'Entrenamiento',
+      reason: 'una rutina borrada no da nombre a la sesión',
+    );
   });
 
   test('repetir en hoy copia ejercicios y rutinas', () {
     final app = newState();
     app.loadRoutine('r2', monday);
-    app.repeatInToday(app.sessionExercises(monday), app.plan(monday).routineIds);
+    app.repeatInToday(
+      app.sessionExercises(monday),
+      app.plan(monday).routineIds,
+    );
     expect(app.sessionExercises(today), app.sessionExercises(monday));
     expect(app.sessionName(today), 'Espalda y bíceps');
     expect(app.selectedDay, today);
@@ -127,7 +172,11 @@ void main() {
   test('ejercicios propios: nombre único sin importar acentos', () {
     final app = newState();
     expect(app.exerciseNameExists('jalon al pecho'), isTrue);
-    final ex = app.createExercise(name: 'Hip thrust', group: 'piernas', kind: ExerciseKind.weight);
+    final ex = app.createExercise(
+      name: 'Hip thrust',
+      group: 'piernas',
+      kind: ExerciseKind.weight,
+    );
     expect(app.exercises.first.id, ex.id);
     expect(app.exerciseNameExists('HIP THRUST'), isTrue);
   });
@@ -135,11 +184,18 @@ void main() {
   test('todo se guarda y se vuelve a cargar', () async {
     final storage = MemoryStorage();
     final app = newState(storage);
-    final ex = app.createExercise(name: 'Hip thrust', group: 'piernas', kind: ExerciseKind.seconds);
+    final ex = app.createExercise(
+      name: 'Hip thrust',
+      group: 'piernas',
+      kind: ExerciseKind.seconds,
+    );
     app.loadRoutine('r1', today);
     app.addSet(today, 'press-banca', const SetEntry(reps: 8, kg: 62.5));
     app.addSet(today, ex.id, const SetEntry(reps: 30));
-    final rid = app.saveRoutine(name: 'Glúteos', items: [RoutineItem(exerciseId: ex.id, sets: 4, reps: 30)]);
+    final rid = app.saveRoutine(
+      name: 'Glúteos',
+      items: [RoutineItem(exerciseId: ex.id, sets: 4, reps: 30)],
+    );
 
     final reloaded = newState(storage);
     await reloaded.load();

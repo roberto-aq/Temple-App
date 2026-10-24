@@ -9,8 +9,10 @@ enum ExerciseKind {
   /// Tiempo en segundos (plancha).
   seconds;
 
-  static ExerciseKind fromName(String? name) =>
-      ExerciseKind.values.firstWhere((k) => k.name == name, orElse: () => ExerciseKind.weight);
+  static ExerciseKind fromName(String? name) => ExerciseKind.values.firstWhere(
+    (k) => k.name == name,
+    orElse: () => ExerciseKind.weight,
+  );
 }
 
 class MuscleGroup {
@@ -20,7 +22,13 @@ class MuscleGroup {
 }
 
 class Exercise {
-  const Exercise({required this.id, required this.name, required this.group, required this.kind, this.custom = false});
+  const Exercise({
+    required this.id,
+    required this.name,
+    required this.group,
+    required this.kind,
+    this.custom = false,
+  });
 
   final String id;
   final String name;
@@ -36,15 +44,20 @@ class Exercise {
   /// Paso de los botones +/− de repeticiones o segundos.
   int get step => timed ? 5 : 1;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'group': group, 'kind': kind.name};
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'group': group,
+    'kind': kind.name,
+  };
 
   factory Exercise.fromJson(Map<String, dynamic> j) => Exercise(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        group: j['group'] as String,
-        kind: ExerciseKind.fromName(j['kind'] as String?),
-        custom: true,
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    group: j['group'] as String,
+    kind: ExerciseKind.fromName(j['kind'] as String?),
+    custom: true,
+  );
 }
 
 /// Una serie registrada. `reps` son segundos en ejercicios de tiempo; `kg` es null si no lleva peso.
@@ -58,21 +71,28 @@ class SetEntry {
   final DateTime? time;
 
   SetEntry copyWith({String? id, int? reps, double? kg, DateTime? time}) =>
-      SetEntry(id: id ?? this.id, reps: reps ?? this.reps, kg: kg ?? this.kg, time: time ?? this.time);
+      SetEntry(
+        id: id ?? this.id,
+        reps: reps ?? this.reps,
+        kg: kg ?? this.kg,
+        time: time ?? this.time,
+      );
 
   Map<String, dynamic> toJson() => {
-        if (id != null) 'id': id,
-        'reps': reps,
-        if (kg != null) 'kg': kg,
-        if (time != null) 't': time!.millisecondsSinceEpoch,
-      };
+    if (id != null) 'id': id,
+    'reps': reps,
+    if (kg != null) 'kg': kg,
+    if (time != null) 't': time!.millisecondsSinceEpoch,
+  };
 
   factory SetEntry.fromJson(Map<String, dynamic> j) => SetEntry(
-        id: j['id'] as String?,
-        reps: (j['reps'] as num).toInt(),
-        kg: (j['kg'] as num?)?.toDouble(),
-        time: j['t'] == null ? null : DateTime.fromMillisecondsSinceEpoch((j['t'] as num).toInt()),
-      );
+    id: j['id'] as String?,
+    reps: (j['reps'] as num).toInt(),
+    kg: (j['kg'] as num?)?.toDouble(),
+    time: j['t'] == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch((j['t'] as num).toInt()),
+  );
 }
 
 class RoutineItem {
@@ -82,13 +102,17 @@ class RoutineItem {
   final int sets;
   final int reps;
 
-  Map<String, dynamic> toJson() => {'ex': exerciseId, 'sets': sets, 'reps': reps};
+  Map<String, dynamic> toJson() => {
+    'ex': exerciseId,
+    'sets': sets,
+    'reps': reps,
+  };
 
   factory RoutineItem.fromJson(Map<String, dynamic> j) => RoutineItem(
-        exerciseId: j['ex'] as String,
-        sets: (j['sets'] as num?)?.toInt() ?? 3,
-        reps: (j['reps'] as num?)?.toInt() ?? 10,
-      );
+    exerciseId: j['ex'] as String,
+    sets: (j['sets'] as num?)?.toInt() ?? 3,
+    reps: (j['reps'] as num?)?.toInt() ?? 10,
+  );
 }
 
 class Routine {
@@ -98,30 +122,39 @@ class Routine {
   final String name;
   final List<RoutineItem> items;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'items': items.map((i) => i.toJson()).toList()};
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'items': items.map((i) => i.toJson()).toList(),
+  };
 
   factory Routine.fromJson(Map<String, dynamic> j) => Routine(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        items: (j['items'] as List).map((i) => RoutineItem.fromJson(i as Map<String, dynamic>)).toList(),
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    items: (j['items'] as List)
+        .map((i) => RoutineItem.fromJson(i as Map<String, dynamic>))
+        .toList(),
+  );
 }
 
 /// Lo que se planeó entrenar un día: rutinas cargadas y ejercicios en orden.
 class DayPlan {
   DayPlan({List<String>? routineIds, List<String>? exerciseIds})
-      : routineIds = routineIds ?? [],
-        exerciseIds = exerciseIds ?? [];
+    : routineIds = routineIds ?? [],
+      exerciseIds = exerciseIds ?? [];
 
   final List<String> routineIds;
   final List<String> exerciseIds;
 
-  Map<String, dynamic> toJson() => {'routines': routineIds, 'items': exerciseIds};
+  Map<String, dynamic> toJson() => {
+    'routines': routineIds,
+    'items': exerciseIds,
+  };
 
   factory DayPlan.fromJson(Map<String, dynamic> j) => DayPlan(
-        routineIds: List<String>.from(j['routines'] as List? ?? const []),
-        exerciseIds: List<String>.from(j['items'] as List? ?? const []),
-      );
+    routineIds: List<String>.from(j['routines'] as List? ?? const []),
+    exerciseIds: List<String>.from(j['items'] as List? ?? const []),
+  );
 }
 
 /// Todas las series de un ejercicio en un día.

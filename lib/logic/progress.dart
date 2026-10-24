@@ -4,9 +4,11 @@ import '../models/models.dart';
 import 'format.dart';
 
 /// Puntaje de una serie para comparar «mejor o peor». Con peso usa el 1RM estimado (Epley).
-double scoreSet(Exercise ex, SetEntry s) => ex.weighted ? (s.kg ?? 0) * (1 + s.reps / 30) : s.reps.toDouble();
+double scoreSet(Exercise ex, SetEntry s) =>
+    ex.weighted ? (s.kg ?? 0) * (1 + s.reps / 30) : s.reps.toDouble();
 
-double bestScore(Exercise ex, Iterable<SetEntry> sets) => sets.fold(0.0, (b, s) => math.max(b, scoreSet(ex, s)));
+double bestScore(Exercise ex, Iterable<SetEntry> sets) =>
+    sets.fold(0.0, (b, s) => math.max(b, scoreSet(ex, s)));
 
 SetEntry? bestSet(Exercise ex, List<SetEntry> sets) {
   SetEntry? best;
@@ -44,30 +46,47 @@ class BeatInfo {
   final String text;
 
   String get label => switch (state) {
-        BeatState.record => '¡Nuevo récord personal!',
-        BeatState.beaten => '¡Superaste la última vez!',
-        BeatState.target => 'Para superar la última vez',
-      };
+    BeatState.record => '¡Nuevo récord personal!',
+    BeatState.beaten => '¡Superaste la última vez!',
+    BeatState.target => 'Para superar la última vez',
+  };
 }
 
 /// `previous`: la última sesión antes del día; `logged`: las series de hoy;
 /// `priorBest`: el mejor puntaje de siempre antes de ese día.
-BeatInfo? beatInfo(Exercise ex, ExerciseSession? previous, List<SetEntry> logged, double priorBest) {
+BeatInfo? beatInfo(
+  Exercise ex,
+  ExerciseSession? previous,
+  List<SetEntry> logged,
+  double priorBest,
+) {
   final pBest = previous == null ? null : bestSet(ex, previous.sets);
   if (pBest == null) return null;
   final cBest = bestSet(ex, logged);
-  if (cBest != null && priorBest > 0 && scoreSet(ex, cBest) > priorBest + 1e-9) {
-    return BeatInfo(BeatState.record, 'Tu mejor serie de siempre: ${setLabel(ex, cBest)}');
+  if (cBest != null &&
+      priorBest > 0 &&
+      scoreSet(ex, cBest) > priorBest + 1e-9) {
+    return BeatInfo(
+      BeatState.record,
+      'Tu mejor serie de siempre: ${setLabel(ex, cBest)}',
+    );
   }
   if (cBest != null && scoreSet(ex, cBest) > scoreSet(ex, pBest) + 1e-9) {
-    return BeatInfo(BeatState.beaten, '${setLabel(ex, cBest)} (antes ${setLabel(ex, pBest)})');
+    return BeatInfo(
+      BeatState.beaten,
+      '${setLabel(ex, cBest)} (antes ${setLabel(ex, pBest)})',
+    );
   }
   if (ex.weighted) {
     final kg = pBest.kg ?? 0;
-    return BeatInfo(BeatState.target,
-        '${fmtNum(kg)} kg × ${pBest.reps + 1}  o  ${fmtNum(kg + weightStep(kg))} kg × ${pBest.reps}');
+    return BeatInfo(
+      BeatState.target,
+      '${fmtNum(kg)} kg × ${pBest.reps + 1}  o  ${fmtNum(kg + weightStep(kg))} kg × ${pBest.reps}',
+    );
   }
-  if (ex.timed) return BeatInfo(BeatState.target, '${pBest.reps + 5} seg en una serie');
+  if (ex.timed) {
+    return BeatInfo(BeatState.target, '${pBest.reps + 5} seg en una serie');
+  }
   return BeatInfo(BeatState.target, '${pBest.reps + 1} reps en una serie');
 }
 
@@ -111,7 +130,10 @@ double metricValue(Exercise ex, List<SetEntry> sets, MetricId id) {
     final kg = s.kg ?? 0;
     switch (id) {
       case MetricId.main:
-        v = math.max(v, ex.weighted ? kg * (1 + s.reps / 30) : s.reps.toDouble());
+        v = math.max(
+          v,
+          ex.weighted ? kg * (1 + s.reps / 30) : s.reps.toDouble(),
+        );
       case MetricId.weight:
         v = math.max(v, kg);
       case MetricId.volume:
@@ -143,7 +165,16 @@ List<bool> recordFlags(List<double> values) {
 }
 
 class ExerciseAnalysis {
-  ExerciseAnalysis._(this.exercise, this.sessions, this.mains, this.trend, this.since, this.best, this.weeks, this.records30);
+  ExerciseAnalysis._(
+    this.exercise,
+    this.sessions,
+    this.mains,
+    this.trend,
+    this.since,
+    this.best,
+    this.weeks,
+    this.records30,
+  );
 
   final Exercise exercise;
   final List<ExerciseSession> sessions;
@@ -164,8 +195,14 @@ class ExerciseAnalysis {
   double get last => mains.isEmpty ? 0 : mains.last;
   Metric get mainMetric => metricsFor(exercise).first;
 
-  factory ExerciseAnalysis(Exercise ex, List<ExerciseSession> sessions, DateTime today) {
-    final mains = [for (final s in sessions) metricValue(ex, s.sets, MetricId.main)];
+  factory ExerciseAnalysis(
+    Exercise ex,
+    List<ExerciseSession> sessions,
+    DateTime today,
+  ) {
+    final mains = [
+      for (final s in sessions) metricValue(ex, s.sets, MetricId.main),
+    ];
     final flags = recordFlags(mains);
     var best = -1.0, bestIdx = -1;
     for (var i = 0; i < mains.length; i++) {
@@ -191,8 +228,22 @@ class ExerciseAnalysis {
       final age = daysBetween(sessions[i].date, today);
       if (flags[i] && age >= 0 && age <= 30) records30++;
     }
-    final weeks = n >= 2 ? math.max(1, (daysBetween(sessions.first.date, sessions.last.date) / 7).round()) : 0;
-    return ExerciseAnalysis._(ex, sessions, mains, trend, since, best < 0 ? 0 : best, weeks, records30);
+    final weeks = n >= 2
+        ? math.max(
+            1,
+            (daysBetween(sessions.first.date, sessions.last.date) / 7).round(),
+          )
+        : 0;
+    return ExerciseAnalysis._(
+      ex,
+      sessions,
+      mains,
+      trend,
+      since,
+      best < 0 ? 0 : best,
+      weeks,
+      records30,
+    );
   }
 
   /// Línea corta de la lista de Progreso.
@@ -218,7 +269,7 @@ class ExerciseAnalysis {
       case Trend.up:
         return since == 0
             ? 'Superaste tu récord en la última sesión (${fmtVal(best)} ${m.unit} de ${m.long}). '
-                'Así funciona la sobrecarga progresiva: un poco más cada vez.'
+                  'Así funciona la sobrecarga progresiva: un poco más cada vez.'
             : 'Tu último récord fue hace $since ${plural(since, 'sesión', 'sesiones')}. Vas por buen camino.';
       case Trend.flat:
         return 'Llevas $since sesiones sin superar tu récord de ${fmtVal(best)} ${m.unit} (${m.long}). '
@@ -246,7 +297,9 @@ class ExerciseAnalysis {
           : 'Mantén ${fmtNum(w)} kg e intenta llegar a $mx reps en todas las series. Cuando lo logres, sube a $next kg.';
     }
     if (ex.timed) {
-      return mn == mx ? 'Intenta aguantar ${mx + 5} segundos por serie.' : 'Intenta llegar a $mx segundos en todas las series.';
+      return mn == mx
+          ? 'Intenta aguantar ${mx + 5} segundos por serie.'
+          : 'Intenta llegar a $mx segundos en todas las series.';
     }
     return mn == mx
         ? 'Intenta ${mx + 1} reps por serie, o agrega peso si ya te resulta fácil.'

@@ -36,7 +36,11 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
             children: [
               const Expanded(child: ScreenTitle('Mis rutinas')),
               const SizedBox(width: 12),
-              HeaderActionPill(label: 'Nueva', filled: true, onTap: () => pushScreen(context, const RoutineEditorScreen())),
+              HeaderActionPill(
+                label: 'Nueva',
+                filled: true,
+                onTap: () => pushScreen(context, const RoutineEditorScreen()),
+              ),
             ],
           ),
         ),
@@ -44,12 +48,22 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
             children: [
-              if (toast != null) ...[ToastBanner(toast), const SizedBox(height: 12)],
+              if (toast != null) ...[
+                ToastBanner(toast),
+                const SizedBox(height: 12),
+              ],
               const SizedBox(height: 8),
-              SectionLabel('${routines.length} ${plural(routines.length, 'rutina', 'rutinas')} · por uso reciente'),
+              SectionLabel(
+                '${routines.length} ${plural(routines.length, 'rutina', 'rutinas')} · por uso reciente',
+              ),
               const SizedBox(height: 10),
               if (routines.isEmpty)
-                const EmptyBox(child: EmptyText('Aún no tienes rutinas. Toca «Nueva» para armar la primera.', align: TextAlign.start)),
+                const EmptyBox(
+                  child: EmptyText(
+                    'Aún no tienes rutinas. Toca «Nueva» para armar la primera.',
+                    align: TextAlign.start,
+                  ),
+                ),
               for (final r in routines) ...[
                 _RoutineCard(
                   routine: r,
@@ -96,8 +110,12 @@ class _RoutineCard extends StatelessWidget {
     final r = routine;
     final last = app.routineLastUsed(r);
     final n = r.items.length;
-    final meta = '$n ${plural(n, 'ejercicio', 'ejercicios')} · ${last == null ? 'aún no la usas' : 'última vez ${agoText(last, app.today)}'}';
-    final exList = [for (final it in r.items) app.exercise(it.exerciseId)?.name ?? it.exerciseId].join(' · ');
+    final meta =
+        '$n ${plural(n, 'ejercicio', 'ejercicios')} · ${last == null ? 'aún no la usas' : 'última vez ${agoText(last, app.today)}'}';
+    final exList = [
+      for (final it in r.items)
+        app.exercise(it.exerciseId)?.name ?? it.exerciseId,
+    ].join(' · ');
 
     return SurfaceCard(
       radius: 20,
@@ -106,11 +124,17 @@ class _RoutineCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(r.name, style: AppText.display(27, weight: FontWeight.w700, height: 1.05)),
+          Text(
+            r.name,
+            style: AppText.display(27, weight: FontWeight.w700, height: 1.05),
+          ),
           const SizedBox(height: 3),
           Text(meta, style: AppText.body(13, color: AppColors.textSecondary)),
           const SizedBox(height: 10),
-          Text(exList, style: AppText.body(14, color: AppColors.textMuted, height: 1.4)),
+          Text(
+            exList,
+            style: AppText.body(14, color: AppColors.textMuted, height: 1.4),
+          ),
           const SizedBox(height: 14),
           if (!confirming)
             Row(
@@ -136,7 +160,8 @@ class _RoutineCard extends StatelessWidget {
                   radius: 12,
                   color: AppColors.control,
                   semanticLabel: 'Editar ${r.name}',
-                  onTap: () => pushScreen(context, RoutineEditorScreen(routine: r)),
+                  onTap: () =>
+                      pushScreen(context, RoutineEditorScreen(routine: r)),
                 ),
                 const SizedBox(width: 8),
                 CircleIconButton(
@@ -163,14 +188,26 @@ class _RoutineCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('¿Eliminar «${r.name}»?', style: AppText.body(15, weight: FontWeight.w600)),
+                    Text(
+                      '¿Eliminar «${r.name}»?',
+                      style: AppText.body(15, weight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 2),
-                    Text('Tus series registradas no se borran.', style: AppText.body(13, color: AppColors.textSecondary)),
+                    Text(
+                      'Tus series registradas no se borran.',
+                      style: AppText.body(13, color: AppColors.textSecondary),
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
-                          child: SecondaryButton(label: 'Cancelar', height: 44, fontSize: 15, radius: 12, onTap: onCancelDelete),
+                          child: SecondaryButton(
+                            label: 'Cancelar',
+                            height: 44,
+                            fontSize: 15,
+                            radius: 12,
+                            onTap: onCancelDelete,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -179,7 +216,16 @@ class _RoutineCard extends StatelessWidget {
                             color: AppColors.alert,
                             radius: 12,
                             height: 44,
-                            child: Center(child: Text('Eliminar', style: AppText.body(15, weight: FontWeight.w700, color: AppColors.background))),
+                            child: Center(
+                              child: Text(
+                                'Eliminar',
+                                style: AppText.body(
+                                  15,
+                                  weight: FontWeight.w700,
+                                  color: AppColors.background,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],

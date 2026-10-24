@@ -14,7 +14,11 @@ import 'home_shell.dart';
 
 /// 2 · Registrar ejercicio: anotar series y compararlas con la última vez.
 class LogExerciseScreen extends StatefulWidget {
-  const LogExerciseScreen({super.key, required this.exerciseId, required this.day});
+  const LogExerciseScreen({
+    super.key,
+    required this.exerciseId,
+    required this.day,
+  });
 
   final String exerciseId;
   final DateTime day;
@@ -78,7 +82,10 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
   void _onFocusChange(FocusNode node, TextEditingController ctrl) {
     if (!mounted) return;
     if (node.hasFocus) {
-      ctrl.selection = TextSelection(baseOffset: 0, extentOffset: ctrl.text.length);
+      ctrl.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: ctrl.text.length,
+      );
     } else {
       // Al salir del campo se muestra el valor válido vigente.
       setState(() => _setDraft(_reps, _kg));
@@ -97,7 +104,12 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
 
   void _bump({int reps = 0, double kg = 0, required int step}) {
     FocusScope.of(context).unfocus();
-    setState(() => _setDraft((_reps + reps).clamp(step, 300), (_kg + kg).clamp(0, 500).toDouble()));
+    setState(
+      () => _setDraft(
+        (_reps + reps).clamp(step, 300),
+        (_kg + kg).clamp(0, 500).toDouble(),
+      ),
+    );
   }
 
   void _saveSet(AppState app, Exercise ex) {
@@ -137,7 +149,10 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
   String? _nextExercise(AppState app) {
     final session = app.sessionExercises(widget.day);
     final cur = session.indexOf(widget.exerciseId);
-    final ordered = [...session.sublist(cur + 1), ...session.sublist(0, cur < 0 ? 0 : cur)];
+    final ordered = [
+      ...session.sublist(cur + 1),
+      ...session.sublist(0, cur < 0 ? 0 : cur),
+    ];
     for (final id in ordered) {
       if (app.setsOn(widget.day, id).isEmpty) return id;
     }
@@ -170,7 +185,9 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       BackPill(
-                        label: app.isToday(day) ? 'Hoy' : weekdaysLong[day.weekday - 1],
+                        label: app.isToday(day)
+                            ? 'Hoy'
+                            : weekdaysLong[day.weekday - 1],
                         semanticLabel: 'Volver al entrenamiento',
                         onTap: () => goToTab(context, AppTab.hoy),
                       ),
@@ -189,27 +206,48 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('${logged.length}', style: AppText.display(52, height: 1, color: AppColors.accent)),
+                      Text(
+                        '${logged.length}',
+                        style: AppText.display(
+                          52,
+                          height: 1,
+                          color: AppColors.accent,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
-                        child: Text('${plural(logged.length, 'serie', 'series')} $dayWord',
-                            style: AppText.body(16, weight: FontWeight.w600, color: AppColors.textSecondary)),
+                        child: Text(
+                          '${plural(logged.length, 'serie', 'series')} $dayWord',
+                          style: AppText.body(
+                            16,
+                            weight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
                       const Spacer(),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 180),
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: SetPills(count: logged.length, alignment: WrapAlignment.end),
+                          child: SetPills(
+                            count: logged.length,
+                            alignment: WrapAlignment.end,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  if (beat != null) ...[const SizedBox(height: 14), _BeatCard(beat)],
+                  if (beat != null) ...[
+                    const SizedBox(height: 14),
+                    _BeatCard(beat),
+                  ],
                   const SizedBox(height: 14),
                   SectionLabel(
-                    editing ? 'Editando serie ${_editIdx! + 1}' : 'Serie ${logged.length + 1}',
+                    editing
+                        ? 'Editando serie ${_editIdx! + 1}'
+                        : 'Serie ${logged.length + 1}',
                     color: editing ? AppColors.accent : AppColors.textSecondary,
                   ),
                   const SizedBox(height: 8),
@@ -288,7 +326,10 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     SecondaryButton(
                       label: 'Siguiente: ${app.exercise(nextId)!.name}',
                       trailingIcon: AppIcons.arrowRight,
-                      onTap: () => replaceScreen(context, LogExerciseScreen(exerciseId: nextId, day: day)),
+                      onTap: () => replaceScreen(
+                        context,
+                        LogExerciseScreen(exerciseId: nextId, day: day),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 18),
@@ -296,21 +337,33 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Expanded(child: SectionLabel('Series de $dayWord')),
-                      if (logged.isNotEmpty) Text('Toca una serie para editarla', style: AppText.body(13, color: AppColors.textSecondary)),
+                      if (logged.isNotEmpty)
+                        Text(
+                          'Toca una serie para editarla',
+                          style: AppText.body(
+                            13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   if (logged.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: EmptyText('Aún no registras series de este ejercicio.', align: TextAlign.start),
+                      child: EmptyText(
+                        'Aún no registras series de este ejercicio.',
+                        align: TextAlign.start,
+                      ),
                     ),
                   for (var i = 0; i < logged.length; i++) ...[
                     _LoggedSetRow(
                       exercise: ex,
                       index: i,
                       entry: logged[i],
-                      previous: prev != null && i < prev.sets.length ? prev.sets[i] : null,
+                      previous: prev != null && i < prev.sets.length
+                          ? prev.sets[i]
+                          : null,
                       editing: editing && _editIdx == i,
                       onEdit: () => _toggleEdit(i, logged[i]),
                       onRemove: () => _removeSet(app, ex, i),
@@ -323,8 +376,13 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     children: [
                       const Expanded(child: SectionLabel('La última vez')),
                       if (prev != null)
-                        Text('${capitalize(agoText(prev.date, app.today))} · ${shortDate(prev.date)}',
-                            style: AppText.body(14, color: AppColors.textSecondary)),
+                        Text(
+                          '${capitalize(agoText(prev.date, app.today))} · ${shortDate(prev.date)}',
+                          style: AppText.body(
+                            14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -332,11 +390,17 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     const EmptyBox(
                       padding: EdgeInsets.all(14),
                       radius: 16,
-                      child: EmptyText('Es la primera vez que registras este ejercicio.', align: TextAlign.start),
+                      child: EmptyText(
+                        'Es la primera vez que registras este ejercicio.',
+                        align: TextAlign.start,
+                      ),
                     )
                   else
                     EmptyBox(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
                       radius: 16,
                       child: Column(
                         children: [
@@ -345,16 +409,31 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 9),
                               decoration: BoxDecoration(
                                 border: Border(
-                                  bottom: BorderSide(color: i == prev.sets.length - 1 ? Colors.transparent : AppColors.border),
+                                  bottom: BorderSide(
+                                    color: i == prev.sets.length - 1
+                                        ? Colors.transparent
+                                        : AppColors.border,
+                                  ),
                                 ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Serie ${i + 1}', style: AppText.body(14, color: AppColors.textSecondary)),
+                                  Text(
+                                    'Serie ${i + 1}',
+                                    style: AppText.body(
+                                      14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
                                   Text(
                                     '${prev.sets[i].reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(prev.sets[i].kg ?? 0)} kg' : ''}',
-                                    style: AppText.display(22, weight: FontWeight.w700, color: AppColors.textMuted),
+                                    style: AppText.display(
+                                      22,
+                                      weight: FontWeight.w700,
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -366,7 +445,13 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                   SecondaryButton(
                     label: 'Ver mi progreso en este ejercicio',
                     icon: AppIcons.chart,
-                    onTap: () => pushScreen(context, ExerciseProgressScreen(exerciseId: ex.id, backLabel: 'Volver')),
+                    onTap: () => pushScreen(
+                      context,
+                      ExerciseProgressScreen(
+                        exerciseId: ex.id,
+                        backLabel: 'Volver',
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -386,15 +471,22 @@ class _BeatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final record = beat.state == BeatState.record;
     final beaten = beat.state == BeatState.beaten;
-    final icon = record ? AppIcons.trophy : (beaten ? AppIcons.check : AppIcons.arrowUp);
+    final icon = record
+        ? AppIcons.trophy
+        : (beaten ? AppIcons.check : AppIcons.arrowUp);
     return Semantics(
       liveRegion: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: record ? AppColors.accent : (beaten ? AppColors.accentSoft(0.1) : AppColors.surface),
+          color: record
+              ? AppColors.accent
+              : (beaten ? AppColors.accentSoft(0.1) : AppColors.surface),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: record || beaten ? AppColors.accent : AppColors.border, width: 1.5),
+          border: Border.all(
+            color: record || beaten ? AppColors.accent : AppColors.border,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
@@ -403,20 +495,43 @@ class _BeatCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: record ? AppColors.background.withValues(alpha: 0.14) : AppColors.accentSoft(0.12),
+                color: record
+                    ? AppColors.background.withValues(alpha: 0.14)
+                    : AppColors.accentSoft(0.12),
               ),
-              child: Center(child: AppIcon(icon, color: record ? AppColors.background : AppColors.accent, strokeWidth: 2.6)),
+              child: Center(
+                child: AppIcon(
+                  icon,
+                  color: record ? AppColors.background : AppColors.accent,
+                  strokeWidth: 2.6,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(beat.label.toUpperCase(),
-                      style: AppText.label(tracking: 0.1, weight: FontWeight.w800, color: record ? AppColors.background : AppColors.textMuted)),
+                  Text(
+                    beat.label.toUpperCase(),
+                    style: AppText.label(
+                      tracking: 0.1,
+                      weight: FontWeight.w800,
+                      color: record
+                          ? AppColors.background
+                          : AppColors.textMuted,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(beat.text,
-                      style: AppText.display(23, weight: FontWeight.w700, height: 1.15, color: record ? AppColors.background : AppColors.text)),
+                  Text(
+                    beat.text,
+                    style: AppText.display(
+                      23,
+                      weight: FontWeight.w700,
+                      height: 1.15,
+                      color: record ? AppColors.background : AppColors.text,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -459,7 +574,10 @@ class _Counter extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: highlighted ? AppColors.accent : AppColors.border, width: 1.5),
+        border: Border.all(
+          color: highlighted ? AppColors.accent : AppColors.border,
+          width: 1.5,
+        ),
       ),
       child: Column(
         children: [
@@ -470,18 +588,31 @@ class _Counter extends StatelessWidget {
             builder: (context, _) => Container(
               height: 80,
               decoration: BoxDecoration(
-                color: focusNode.hasFocus ? const Color(0xFF1B1D22) : Colors.transparent,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                color: focusNode.hasFocus
+                    ? const Color(0xFF1B1D22)
+                    : Colors.transparent,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(10),
+                ),
               ),
               child: DashedBottomLine(
-                color: focusNode.hasFocus ? AppColors.textSecondary : AppColors.dashed,
+                color: focusNode.hasFocus
+                    ? AppColors.textSecondary
+                    : AppColors.dashed,
                 child: TextField(
                   controller: controller,
                   focusNode: focusNode,
                   onChanged: onChanged,
                   textAlign: TextAlign.center,
-                  keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-                  inputFormatters: decimal ? [_KgFormatter()] : [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
+                  keyboardType: TextInputType.numberWithOptions(
+                    decimal: decimal,
+                  ),
+                  inputFormatters: decimal
+                      ? [_KgFormatter()]
+                      : [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(3),
+                        ],
                   style: AppText.display(76, height: 1),
                   decoration: InputDecoration(
                     border: InputBorder.none,
@@ -497,9 +628,21 @@ class _Counter extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              Expanded(child: _StepButton(icon: AppIcons.minus, label: minusLabel, onTap: onMinus)),
+              Expanded(
+                child: _StepButton(
+                  icon: AppIcons.minus,
+                  label: minusLabel,
+                  onTap: onMinus,
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: _StepButton(icon: AppIcons.plus, label: plusLabel, onTap: onPlus)),
+              Expanded(
+                child: _StepButton(
+                  icon: AppIcons.plus,
+                  label: plusLabel,
+                  onTap: onPlus,
+                ),
+              ),
             ],
           ),
         ],
@@ -511,15 +654,23 @@ class _Counter extends StatelessWidget {
 /// Acepta hasta 3 enteros y 2 decimales, con coma o punto.
 class _KgFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    var v = newValue.text.replaceAll('.', ',').replaceAll(RegExp(r'[^0-9,]'), '');
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var v = newValue.text
+        .replaceAll('.', ',')
+        .replaceAll(RegExp(r'[^0-9,]'), '');
     final parts = v.split(',');
     v = parts.first.length > 3 ? parts.first.substring(0, 3) : parts.first;
     if (parts.length > 1) {
       final dec = parts.sublist(1).join();
       v += ',${dec.length > 2 ? dec.substring(0, 2) : dec}';
     }
-    return TextEditingValue(text: v, selection: TextSelection.collapsed(offset: v.length));
+    return TextEditingValue(
+      text: v,
+      selection: TextSelection.collapsed(offset: v.length),
+    );
   }
 }
 
@@ -530,7 +681,10 @@ class DashedBottomLine extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => CustomPaint(foregroundPainter: _DashLinePainter(color), child: Center(child: child));
+  Widget build(BuildContext context) => CustomPaint(
+    foregroundPainter: _DashLinePainter(color),
+    child: Center(child: child),
+  );
 }
 
 class _DashLinePainter extends CustomPainter {
@@ -553,7 +707,11 @@ class _DashLinePainter extends CustomPainter {
 }
 
 class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.label, required this.onTap});
+  const _StepButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
   final AppIcons icon;
   final String label;
   final VoidCallback onTap;
@@ -567,7 +725,9 @@ class _StepButton extends StatelessWidget {
       radius: 14,
       height: 54,
       semanticLabel: label,
-      child: Center(child: AppIcon(icon, size: 26, color: AppColors.text, strokeWidth: 2.6)),
+      child: Center(
+        child: AppIcon(icon, size: 26, color: AppColors.text, strokeWidth: 2.6),
+      ),
     );
   }
 }
@@ -596,9 +756,21 @@ class _LoggedSetRow extends StatelessWidget {
     final ex = exercise;
     final cmp = previous == null ? null : compareSet(ex, entry, previous!);
     final (arrowIcon, arrowColor, arrowText) = switch (cmp) {
-      SetCompare.up => (AppIcons.arrowUp, AppColors.accent, ', mejor que la última vez'),
-      SetCompare.equal => (AppIcons.equal, AppColors.textSecondary, ', igual que la última vez'),
-      SetCompare.down => (AppIcons.arrowDown, AppColors.alert, ', por debajo de la última vez'),
+      SetCompare.up => (
+        AppIcons.arrowUp,
+        AppColors.accent,
+        ', mejor que la última vez',
+      ),
+      SetCompare.equal => (
+        AppIcons.equal,
+        AppColors.textSecondary,
+        ', igual que la última vez',
+      ),
+      SetCompare.down => (
+        AppIcons.arrowDown,
+        AppColors.alert,
+        ', por debajo de la última vez',
+      ),
       null => (null, Colors.transparent, ''),
     };
     final Color bg, border, numColor;
@@ -619,14 +791,24 @@ class _LoggedSetRow extends StatelessWidget {
       border = AppColors.border;
       numColor = AppColors.textFaint;
     }
-    final main = '${entry.reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(entry.kg ?? 0)} kg' : ''}';
+    final main =
+        '${entry.reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(entry.kg ?? 0)} kg' : ''}';
     final big = AppText.display(32, height: 1);
-    final small = AppText.display(15, weight: FontWeight.w700, color: AppColors.textSecondary, height: 1);
+    final small = AppText.display(
+      15,
+      weight: FontWeight.w700,
+      color: AppColors.textSecondary,
+      height: 1,
+    );
 
     return Container(
       constraints: const BoxConstraints(minHeight: 64),
       padding: const EdgeInsets.fromLTRB(6, 6, 4, 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16), border: Border.all(color: border, width: 1.5)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border, width: 1.5),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -642,7 +824,10 @@ class _LoggedSetRow extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 30,
-                    child: Text('${index + 1}', style: AppText.display(20, color: numColor)),
+                    child: Text(
+                      '${index + 1}',
+                      style: AppText.display(20, color: numColor),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -658,8 +843,18 @@ class _LoggedSetRow extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text('kg', style: small),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              child: Text('×', style: AppText.display(22, weight: FontWeight.w700, color: AppColors.textDisabled, height: 1)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                '×',
+                                style: AppText.display(
+                                  22,
+                                  weight: FontWeight.w700,
+                                  color: AppColors.textDisabled,
+                                  height: 1,
+                                ),
+                              ),
                             ),
                           ],
                           Text('${entry.reps}', style: big),
@@ -673,8 +868,17 @@ class _LoggedSetRow extends StatelessWidget {
                     Container(
                       width: 38,
                       height: 38,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: arrowColor),
-                      child: Center(child: AppIcon(arrowIcon, color: AppColors.background, strokeWidth: 3.2)),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: arrowColor,
+                      ),
+                      child: Center(
+                        child: AppIcon(
+                          arrowIcon,
+                          color: AppColors.background,
+                          strokeWidth: 3.2,
+                        ),
+                      ),
                     ),
                 ],
               ),

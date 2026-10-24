@@ -30,10 +30,10 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _setMode(bool signUp) => setState(() {
-        _signUp = signUp;
-        _error = null;
-        _info = null;
-      });
+    _signUp = signUp;
+    _error = null;
+    _info = null;
+  });
 
   Future<void> _submit() async {
     final email = _email.text.trim();
@@ -41,9 +41,13 @@ class _AuthScreenState extends State<AuthScreen> {
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       return setState(() => _error = 'Escribe un correo válido.');
     }
-    if (password.isEmpty) return setState(() => _error = 'Escribe tu contraseña.');
+    if (password.isEmpty) {
+      return setState(() => _error = 'Escribe tu contraseña.');
+    }
     if (_signUp && password.length < 6) {
-      return setState(() => _error = 'La contraseña debe tener al menos 6 caracteres.');
+      return setState(
+        () => _error = 'La contraseña debe tener al menos 6 caracteres.',
+      );
     }
 
     FocusScope.of(context).unfocus();
@@ -60,7 +64,8 @@ class _AuthScreenState extends State<AuthScreen> {
         if (res.session == null && mounted) {
           setState(() {
             _signUp = false;
-            _info = 'Te enviamos un correo a $email. Abre el enlace para confirmar la cuenta y después entra aquí.';
+            _info =
+                'Te enviamos un correo a $email. Abre el enlace para confirmar la cuenta y después entra aquí.';
           });
         }
       } else {
@@ -76,19 +81,25 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  static const _offlineMessage = 'No se pudo conectar. Revisa tu internet e inténtalo de nuevo.';
+  static const _offlineMessage =
+      'No se pudo conectar. Revisa tu internet e inténtalo de nuevo.';
 
   String _authMessage(AuthException e) {
     if (e is AuthRetryableFetchException) return _offlineMessage;
     return switch (e.code) {
       'invalid_credentials' => 'Correo o contraseña incorrectos.',
-      'email_not_confirmed' => 'Aún no confirmas tu correo. Abre el enlace que te enviamos.',
-      'user_already_exists' || 'email_exists' => 'Ya hay una cuenta con ese correo. Entra con tu contraseña.',
-      'weak_password' => 'Esa contraseña es muy débil. Prueba con una más larga.',
+      'email_not_confirmed' =>
+        'Aún no confirmas tu correo. Abre el enlace que te enviamos.',
+      'user_already_exists' || 'email_exists' =>
+        'Ya hay una cuenta con ese correo. Entra con tu contraseña.',
+      'weak_password' =>
+        'Esa contraseña es muy débil. Prueba con una más larga.',
       'email_address_invalid' => 'Ese correo no es válido.',
-      'over_email_send_rate_limit' => 'Se enviaron demasiados correos. Espera unos minutos e inténtalo otra vez.',
+      'over_email_send_rate_limit' =>
+        'Se enviaron demasiados correos. Espera unos minutos e inténtalo otra vez.',
       'over_request_rate_limit' => 'Demasiados intentos. Espera un momento.',
-      'signup_disabled' || 'email_provider_disabled' => 'El registro con correo está desactivado en el servidor.',
+      'signup_disabled' || 'email_provider_disabled' =>
+        'El registro con correo está desactivado en el servidor.',
       _ => e.message,
     };
   }
@@ -110,11 +121,21 @@ class _AuthScreenState extends State<AuthScreen> {
                       children: [
                         const TempleLogo(size: 52),
                         const SizedBox(width: 12),
-                        Text('TEMPLE', style: AppText.display(56, height: 0.9, letterSpacing: 5.6)),
+                        Text(
+                          'TEMPLE',
+                          style: AppText.display(
+                            56,
+                            height: 0.9,
+                            letterSpacing: 5.6,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text('Fuerza que se templa, sesión a sesión.', style: AppText.body(16, color: AppColors.textSecondary)),
+                    Text(
+                      'Fuerza que se templa, sesión a sesión.',
+                      style: AppText.body(16, color: AppColors.textSecondary),
+                    ),
                     const SizedBox(height: 44),
                     SectionLabel(_signUp ? 'Nueva cuenta' : 'Tu cuenta'),
                     const SizedBox(height: 2),
@@ -134,22 +155,41 @@ class _AuthScreenState extends State<AuthScreen> {
                       hint: _signUp ? 'Mínimo 6 caracteres' : '••••••••',
                       controller: _password,
                       obscure: !_showPassword,
-                      autofillHints: [_signUp ? AutofillHints.newPassword : AutofillHints.password],
+                      autofillHints: [
+                        _signUp
+                            ? AutofillHints.newPassword
+                            : AutofillHints.password,
+                      ],
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _busy ? null : _submit(),
                       suffix: IconButton(
-                        tooltip: _showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña',
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
-                        icon: AppIcon(_showPassword ? AppIcons.eyeOff : AppIcons.eye, size: 22, color: AppColors.textSecondary),
+                        tooltip: _showPassword
+                            ? 'Ocultar contraseña'
+                            : 'Mostrar contraseña',
+                        onPressed: () =>
+                            setState(() => _showPassword = !_showPassword),
+                        icon: AppIcon(
+                          _showPassword ? AppIcons.eyeOff : AppIcons.eye,
+                          size: 22,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                    if (_error != null) ...[const SizedBox(height: 14), _Message(_error!, error: true)],
-                    if (_info != null) ...[const SizedBox(height: 14), _Message(_info!)],
+                    if (_error != null) ...[
+                      const SizedBox(height: 14),
+                      _Message(_error!, error: true),
+                    ],
+                    if (_info != null) ...[
+                      const SizedBox(height: 14),
+                      _Message(_info!),
+                    ],
                     const SizedBox(height: 22),
                     Opacity(
                       opacity: _busy ? 0.6 : 1,
                       child: PrimaryButton(
-                        label: _busy ? (_signUp ? 'Creando cuenta…' : 'Entrando…') : (_signUp ? 'Crear cuenta' : 'Entrar'),
+                        label: _busy
+                            ? (_signUp ? 'Creando cuenta…' : 'Entrando…')
+                            : (_signUp ? 'Crear cuenta' : 'Entrar'),
                         onTap: _busy ? null : _submit,
                       ),
                     ),
@@ -162,12 +202,21 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Center(
                         child: Text.rich(
                           TextSpan(
-                            text: _signUp ? '¿Ya tienes cuenta? ' : '¿No tienes cuenta? ',
-                            style: AppText.body(15, color: AppColors.textSecondary),
+                            text: _signUp
+                                ? '¿Ya tienes cuenta? '
+                                : '¿No tienes cuenta? ',
+                            style: AppText.body(
+                              15,
+                              color: AppColors.textSecondary,
+                            ),
                             children: [
                               TextSpan(
                                 text: _signUp ? 'Entrar' : 'Crear una',
-                                style: AppText.body(15, weight: FontWeight.w700, color: AppColors.accent),
+                                style: AppText.body(
+                                  15,
+                                  weight: FontWeight.w700,
+                                  color: AppColors.accent,
+                                ),
                               ),
                             ],
                           ),
@@ -210,12 +259,16 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    OutlineInputBorder border(Color c) =>
-        OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: c, width: 1.5));
+    OutlineInputBorder border(Color c) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: c, width: 1.5),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ExcludeSemantics(child: Text(label.toUpperCase(), style: AppText.label())),
+        ExcludeSemantics(
+          child: Text(label.toUpperCase(), style: AppText.label()),
+        ),
         const SizedBox(height: 6),
         Semantics(
           label: label,
@@ -234,7 +287,10 @@ class _Field extends StatelessWidget {
               hintStyle: AppText.body(18, color: AppColors.textDisabled),
               filled: true,
               fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
               enabledBorder: border(AppColors.borderStrong),
               focusedBorder: border(AppColors.textSecondary),
               suffixIcon: suffix,
@@ -261,9 +317,14 @@ class _Message extends StatelessWidget {
         decoration: BoxDecoration(
           color: error ? AppColors.alertSoft(0.08) : AppColors.accentSoft(0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: error ? const Color(0xFF5A3A32) : AppColors.accentSoft(0.35)),
+          border: Border.all(
+            color: error ? const Color(0xFF5A3A32) : AppColors.accentSoft(0.35),
+          ),
         ),
-        child: Text(text, style: AppText.body(14, color: AppColors.textSoft, height: 1.4)),
+        child: Text(
+          text,
+          style: AppText.body(14, color: AppColors.textSoft, height: 1.4),
+        ),
       ),
     );
   }

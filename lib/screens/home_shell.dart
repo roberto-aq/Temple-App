@@ -24,10 +24,16 @@ class ShellController extends ValueNotifier<AppTab> {
 }
 
 class ShellScope extends InheritedNotifier<ShellController> {
-  const ShellScope({super.key, required ShellController controller, required super.child}) : super(notifier: controller);
+  const ShellScope({
+    super.key,
+    required ShellController controller,
+    required super.child,
+  }) : super(notifier: controller);
 
-  static ShellController of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<ShellScope>()!.notifier!;
-  static ShellController read(BuildContext context) => context.getInheritedWidgetOfExactType<ShellScope>()!.notifier!;
+  static ShellController of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ShellScope>()!.notifier!;
+  static ShellController read(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<ShellScope>()!.notifier!;
 }
 
 /// Cierra las pantallas apiladas y muestra la pestaña indicada.
@@ -41,7 +47,9 @@ Future<T?> pushScreen<T>(BuildContext context, Widget screen) =>
     Navigator.of(context).push<T>(MaterialPageRoute(builder: (_) => screen));
 
 Future<T?> replaceScreen<T>(BuildContext context, Widget screen) =>
-    Navigator.of(context).pushReplacement<T, void>(MaterialPageRoute(builder: (_) => screen));
+    Navigator.of(
+      context,
+    ).pushReplacement<T, void>(MaterialPageRoute(builder: (_) => screen));
 
 class HomeShell extends StatelessWidget {
   const HomeShell({super.key});
@@ -54,7 +62,12 @@ class HomeShell extends StatelessWidget {
         bottom: false,
         child: IndexedStack(
           index: tab.index,
-          children: const [TodayScreen(), RoutinesScreen(), ProgressScreen(), LibraryScreen()],
+          children: const [
+            TodayScreen(),
+            RoutinesScreen(),
+            ProgressScreen(),
+            LibraryScreen(),
+          ],
         ),
       ),
       bottomNavigationBar: const _BottomNav(),
@@ -82,7 +95,13 @@ class _BottomNav extends StatelessWidget {
         child: Row(
           children: [
             for (final t in AppTab.values)
-              Expanded(child: _NavItem(tab: t, active: shell.value == t, onTap: () => shell.value = t)),
+              Expanded(
+                child: _NavItem(
+                  tab: t,
+                  active: shell.value == t,
+                  onTap: () => shell.value = t,
+                ),
+              ),
           ],
         ),
       ),
@@ -91,7 +110,11 @@ class _BottomNav extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({required this.tab, required this.active, required this.onTap});
+  const _NavItem({
+    required this.tab,
+    required this.active,
+    required this.onTap,
+  });
 
   final AppTab tab;
   final bool active;
@@ -115,13 +138,23 @@ class _NavItem extends StatelessWidget {
               height: 3,
               decoration: BoxDecoration(
                 color: active ? AppColors.accent : Colors.transparent,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(4),
+                ),
               ),
             ),
             const SizedBox(height: 11),
             AppIcon(tab.icon, size: 24, color: color, strokeWidth: 2.1),
             const SizedBox(height: 5),
-            Text(tab.label, style: AppText.body(12, weight: FontWeight.w700, color: color, letterSpacing: 0.5)),
+            Text(
+              tab.label,
+              style: AppText.body(
+                12,
+                weight: FontWeight.w700,
+                color: color,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
       ),

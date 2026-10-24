@@ -10,10 +10,13 @@ class SupabaseConfig {
   SupabaseConfig._();
 
   static const url = String.fromEnvironment('SUPABASE_URL');
-  static const _publishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  static const _publishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+  );
   static const _anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  static String get key => _publishableKey.isNotEmpty ? _publishableKey : _anonKey;
+  static String get key =>
+      _publishableKey.isNotEmpty ? _publishableKey : _anonKey;
 
   /// Qué falta o está mal en la configuración; null si se puede conectar.
   static String? get problem {
@@ -34,8 +37,11 @@ class SupabaseConfig {
     final parts = key.split('.');
     if (parts.length != 3) return false;
     try {
-      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-      return (jsonDecode(payload) as Map<String, dynamic>)['role'] == 'service_role';
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      return (jsonDecode(payload) as Map<String, dynamic>)['role'] ==
+          'service_role';
     } catch (_) {
       return false;
     }

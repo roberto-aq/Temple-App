@@ -14,10 +14,12 @@ class PrefsStorage implements AppStorage {
   final String _key;
 
   /// Copia local de los datos de una cuenta, para abrir la app sin conexión.
-  factory PrefsStorage.cache(SharedPreferences prefs, String userId) => PrefsStorage(prefs, 'temple.cache.$userId');
+  factory PrefsStorage.cache(SharedPreferences prefs, String userId) =>
+      PrefsStorage(prefs, 'temple.cache.$userId');
 
   /// Cambios de una cuenta que aún no llegan a Supabase.
-  factory PrefsStorage.outbox(SharedPreferences prefs, String userId) => PrefsStorage(prefs, 'temple.outbox.$userId');
+  factory PrefsStorage.outbox(SharedPreferences prefs, String userId) =>
+      PrefsStorage(prefs, 'temple.outbox.$userId');
 
   @override
   Future<String?> load() async => _prefs.getString(_key);

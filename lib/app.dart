@@ -8,14 +8,14 @@ import 'theme/app_theme.dart';
 
 /// MaterialApp con el tema y el idioma de Temple.
 MaterialApp templeMaterialApp({required Widget home}) => MaterialApp(
-      title: 'Temple',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      locale: const Locale('es'),
-      supportedLocales: const [Locale('es')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      home: home,
-    );
+  title: 'Temple',
+  debugShowCheckedModeBanner: false,
+  theme: buildAppTheme(),
+  locale: const Locale('es'),
+  supportedLocales: const [Locale('es')],
+  localizationsDelegates: GlobalMaterialLocalizations.delegates,
+  home: home,
+);
 
 /// La app con una cuenta abierta (o sin cuenta, en los tests).
 class TempleApp extends StatefulWidget {
@@ -41,7 +41,10 @@ class _TempleAppState extends State<TempleApp> {
   Widget build(BuildContext context) {
     Widget app = AppScope(
       state: widget.state,
-      child: ShellScope(controller: _shell, child: templeMaterialApp(home: const HomeShell())),
+      child: ShellScope(
+        controller: _shell,
+        child: templeMaterialApp(home: const HomeShell()),
+      ),
     );
     final account = widget.account;
     if (account != null) app = AccountScope(account: account, child: app);

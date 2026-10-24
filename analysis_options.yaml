@@ -1,1 +1,5 @@
 include: package:flutter_lints/flutter.yaml
+
+# Estilo del código: `dart format .` (también lo usan el editor y el formateo al guardar).
+formatter:
+  page_width: 80

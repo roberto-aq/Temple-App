@@ -5,8 +5,8 @@ import '../models/models.dart';
 /// Rutina en edición, compartida entre el editor y la biblioteca en modo «elegir».
 class RoutineDraft extends ChangeNotifier {
   RoutineDraft({this.id, String name = '', List<RoutineItem>? items})
-      : _name = name,
-        _items = List.of(items ?? const []);
+    : _name = name,
+      _items = List.of(items ?? const []);
 
   /// Id de la rutina que se edita; null si es nueva.
   final String? id;
@@ -25,7 +25,13 @@ class RoutineDraft extends ChangeNotifier {
 
   void add(Exercise ex) {
     if (contains(ex.id)) return;
-    _items.add(RoutineItem(exerciseId: ex.id, sets: 3, reps: ex.timed ? 30 : (ex.weighted ? 10 : 12)));
+    _items.add(
+      RoutineItem(
+        exerciseId: ex.id,
+        sets: 3,
+        reps: ex.timed ? 30 : (ex.weighted ? 10 : 12),
+      ),
+    );
     notifyListeners();
   }
 

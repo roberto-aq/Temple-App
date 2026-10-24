@@ -20,30 +20,45 @@ Future<void> showAccountSheet(BuildContext context, Account account) {
 /// Ícono, color, título y detalle del estado de sincronización.
 (AppIcons, Color, String, String) syncSummary(SyncService s, DateTime now) {
   final n = s.pending;
-  final waiting = '$n ${plural(n, 'cambio guardado', 'cambios guardados')} en el teléfono';
+  final waiting =
+      '$n ${plural(n, 'cambio guardado', 'cambios guardados')} en el teléfono';
   return switch (s.status) {
-    SyncStatus.syncing => (AppIcons.repeat, AppColors.accent, 'Sincronizando…', n > 0 ? 'Subiendo $n ${plural(n, 'cambio', 'cambios')}' : 'Trayendo tus datos'),
+    SyncStatus.syncing => (
+      AppIcons.repeat,
+      AppColors.accent,
+      'Sincronizando…',
+      n > 0
+          ? 'Subiendo $n ${plural(n, 'cambio', 'cambios')}'
+          : 'Trayendo tus datos',
+    ),
     SyncStatus.offline => (
-        AppIcons.cloudOff,
-        AppColors.alert,
-        'Sin conexión',
-        n > 0
-            ? '$waiting. ${plural(n, 'Se sube solo', 'Se suben solos')} cuando vuelva la conexión.'
-            : 'Puedes seguir registrando: todo se guarda en el teléfono.',
-      ),
+      AppIcons.cloudOff,
+      AppColors.alert,
+      'Sin conexión',
+      n > 0
+          ? '$waiting. ${plural(n, 'Se sube solo', 'Se suben solos')} cuando vuelva la conexión.'
+          : 'Puedes seguir registrando: todo se guarda en el teléfono.',
+    ),
     SyncStatus.error => (
-        AppIcons.cloudOff,
-        AppColors.alert,
-        'No se pudo sincronizar',
-        '${s.lastError ?? 'Error del servidor'}. ${n > 0 ? '$waiting; ' : ''}se reintentará sola.',
-      ),
-    SyncStatus.synced when n > 0 => (AppIcons.cloud, AppColors.textSecondary, 'Cambios por subir', waiting),
+      AppIcons.cloudOff,
+      AppColors.alert,
+      'No se pudo sincronizar',
+      '${s.lastError ?? 'Error del servidor'}. ${n > 0 ? '$waiting; ' : ''}se reintentará sola.',
+    ),
+    SyncStatus.synced when n > 0 => (
+      AppIcons.cloud,
+      AppColors.textSecondary,
+      'Cambios por subir',
+      waiting,
+    ),
     SyncStatus.synced => (
-        AppIcons.check,
-        AppColors.accent,
-        'Todo guardado en la nube',
-        s.lastSynced == null ? 'Aún no se ha sincronizado.' : 'Última sincronización: ${_ago(s.lastSynced!, now)}.',
-      ),
+      AppIcons.check,
+      AppColors.accent,
+      'Todo guardado en la nube',
+      s.lastSynced == null
+          ? 'Aún no se ha sincronizado.'
+          : 'Última sincronización: ${_ago(s.lastSynced!, now)}.',
+    ),
   };
 }
 
@@ -51,8 +66,11 @@ String _ago(DateTime t, DateTime now) {
   final m = now.difference(t).inMinutes;
   if (m < 1) return 'hace un momento';
   if (m < 60) return 'hace $m min';
-  final hh = t.hour.toString().padLeft(2, '0'), mm = t.minute.toString().padLeft(2, '0');
-  return daysBetween(t, now) == 0 ? 'hoy a las $hh:$mm' : '${shortDate(t)}, $hh:$mm';
+  final hh = t.hour.toString().padLeft(2, '0'),
+      mm = t.minute.toString().padLeft(2, '0');
+  return daysBetween(t, now) == 0
+      ? 'hoy a las $hh:$mm'
+      : '${shortDate(t)}, $hh:$mm';
 }
 
 class _AccountSheet extends StatefulWidget {
@@ -99,7 +117,12 @@ class _AccountSheetState extends State<_AccountSheet> {
             border: Border(top: BorderSide(color: AppColors.borderStrong)),
             borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
           ),
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 24 + MediaQuery.paddingOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            24 + MediaQuery.paddingOf(context).bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,18 +132,36 @@ class _AccountSheetState extends State<_AccountSheet> {
                   margin: const EdgeInsets.only(top: 10, bottom: 4),
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: AppColors.handle, borderRadius: BorderRadius.circular(99)),
+                  decoration: BoxDecoration(
+                    color: AppColors.handle,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Expanded(child: Semantics(header: true, child: Text('TU CUENTA', style: AppText.display(32, height: 1)))),
-                  CircleIconButton(icon: AppIcons.close, semanticLabel: 'Cerrar', onTap: () => Navigator.pop(context)),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        'TU CUENTA',
+                        style: AppText.display(32, height: 1),
+                      ),
+                    ),
+                  ),
+                  CircleIconButton(
+                    icon: AppIcons.close,
+                    semanticLabel: 'Cerrar',
+                    onTap: () => Navigator.pop(context),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
-              Text(widget.account.email, style: AppText.body(16, color: AppColors.textSecondary)),
+              Text(
+                widget.account.email,
+                style: AppText.body(16, color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 16),
               Semantics(
                 liveRegion: true,
@@ -136,14 +177,28 @@ class _AccountSheetState extends State<_AccountSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(title, style: AppText.body(16, weight: FontWeight.w600)),
+                            Text(
+                              title,
+                              style: AppText.body(16, weight: FontWeight.w600),
+                            ),
                             const SizedBox(height: 2),
-                            Text(detail, style: AppText.body(13, color: AppColors.textSecondary, height: 1.35)),
+                            Text(
+                              detail,
+                              style: AppText.body(
+                                13,
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
                             if (sync.discarded > 0) ...[
                               const SizedBox(height: 4),
                               Text(
                                 'El servidor rechazó ${sync.discarded} ${plural(sync.discarded, 'cambio', 'cambios')} por datos inválidos.',
-                                style: AppText.body(13, color: AppColors.alert, height: 1.35),
+                                style: AppText.body(
+                                  13,
+                                  color: AppColors.alert,
+                                  height: 1.35,
+                                ),
                               ),
                             ],
                           ],
@@ -180,11 +235,22 @@ class _AccountSheetState extends State<_AccountSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('¿Cerrar sesión sin subir $n ${plural(n, 'cambio', 'cambios')}?',
-                            style: AppText.body(15, weight: FontWeight.w600)),
+                        Text(
+                          '¿Cerrar sesión sin subir $n ${plural(n, 'cambio', 'cambios')}?',
+                          style: AppText.body(15, weight: FontWeight.w600),
+                        ),
                         const SizedBox(height: 2),
-                        Text(plural(n, 'Aún no llega a la nube. Si cierras sesión ahora, se pierde.', 'Aún no llegan a la nube. Si cierras sesión ahora, se pierden.'),
-                            style: AppText.body(13, color: AppColors.textSecondary)),
+                        Text(
+                          plural(
+                            n,
+                            'Aún no llega a la nube. Si cierras sesión ahora, se pierde.',
+                            'Aún no llegan a la nube. Si cierras sesión ahora, se pierden.',
+                          ),
+                          style: AppText.body(
+                            13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         Row(
                           children: [
@@ -194,7 +260,8 @@ class _AccountSheetState extends State<_AccountSheet> {
                                 height: 44,
                                 fontSize: 15,
                                 radius: 12,
-                                onTap: () => setState(() => _confirmSignOut = false),
+                                onTap: () =>
+                                    setState(() => _confirmSignOut = false),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -205,8 +272,14 @@ class _AccountSheetState extends State<_AccountSheet> {
                                 radius: 12,
                                 height: 44,
                                 child: Center(
-                                  child: Text('Cerrar sesión',
-                                      style: AppText.body(15, weight: FontWeight.w700, color: AppColors.background)),
+                                  child: Text(
+                                    'Cerrar sesión',
+                                    style: AppText.body(
+                                      15,
+                                      weight: FontWeight.w700,
+                                      color: AppColors.background,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -235,8 +308,12 @@ class AccountButton extends StatelessWidget {
     return ListenableBuilder(
       listenable: sync,
       builder: (context, _) {
-        final problem = sync.status == SyncStatus.offline || sync.status == SyncStatus.error;
-        final dot = problem ? AppColors.alert : (sync.pending > 0 ? AppColors.textSecondary : null);
+        final problem =
+            sync.status == SyncStatus.offline ||
+            sync.status == SyncStatus.error;
+        final dot = problem
+            ? AppColors.alert
+            : (sync.pending > 0 ? AppColors.textSecondary : null);
         final (_, _, title, _) = syncSummary(sync, DateTime.now());
         return Stack(
           clipBehavior: Clip.none,

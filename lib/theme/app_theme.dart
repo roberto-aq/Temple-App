@@ -43,17 +43,53 @@ class AppText {
   static const bodyFamily = 'Barlow';
   static const displayFamily = 'BarlowCondensed';
 
-  static TextStyle display(double size, {FontWeight weight = FontWeight.w800, Color color = AppColors.text, double? height, double letterSpacing = 0}) {
-    return TextStyle(fontFamily: displayFamily, fontSize: size, fontWeight: weight, color: color, height: height, letterSpacing: letterSpacing);
+  static TextStyle display(
+    double size, {
+    FontWeight weight = FontWeight.w800,
+    Color color = AppColors.text,
+    double? height,
+    double letterSpacing = 0,
+  }) {
+    return TextStyle(
+      fontFamily: displayFamily,
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
   }
 
-  static TextStyle body(double size, {FontWeight weight = FontWeight.w400, Color color = AppColors.text, double? height, double letterSpacing = 0}) {
-    return TextStyle(fontFamily: bodyFamily, fontSize: size, fontWeight: weight, color: color, height: height, letterSpacing: letterSpacing);
+  static TextStyle body(
+    double size, {
+    FontWeight weight = FontWeight.w400,
+    Color color = AppColors.text,
+    double? height,
+    double letterSpacing = 0,
+  }) {
+    return TextStyle(
+      fontFamily: bodyFamily,
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
   }
 
   /// Etiqueta en mayúsculas con tracking amplio («SERIES», «LA ÚLTIMA VEZ»…).
-  static TextStyle label({double size = 12, Color color = AppColors.textSecondary, FontWeight weight = FontWeight.w700, double tracking = 0.12}) {
-    return body(size, weight: weight, color: color, letterSpacing: size * tracking);
+  static TextStyle label({
+    double size = 12,
+    Color color = AppColors.textSecondary,
+    FontWeight weight = FontWeight.w700,
+    double tracking = 0.12,
+  }) {
+    return body(
+      size,
+      weight: weight,
+      color: color,
+      letterSpacing: size * tracking,
+    );
   }
 }
 
@@ -74,7 +110,10 @@ ThemeData buildAppTheme() {
     splashFactory: InkSparkle.splashFactory,
   );
   return base.copyWith(
-    textTheme: base.textTheme.apply(bodyColor: AppColors.text, displayColor: AppColors.text),
+    textTheme: base.textTheme.apply(
+      bodyColor: AppColors.text,
+      displayColor: AppColors.text,
+    ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: AppColors.accent,
       selectionColor: AppColors.accentSoft(0.35),

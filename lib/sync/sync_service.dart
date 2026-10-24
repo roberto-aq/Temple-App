@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthRetryableFetchException, PostgrestException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthException, AuthRetryableFetchException, PostgrestException;
 
 import '../data/storage.dart';
 import 'outbox.dart';
@@ -18,10 +19,13 @@ typedef Snapshot = Map<SyncTable, List<Map<String, dynamic>>>;
 /// una cola ([Outbox]) que se envía en cuanto hay conexión. Al descargar, el
 /// estado del servidor se combina con lo que todavía está en la cola.
 class SyncService extends ChangeNotifier {
-  SyncService({required RemoteBackend backend, required AppStorage storage, DateTime Function()? clock})
-      : _remote = backend,
-        _outbox = Outbox(storage),
-        _clock = clock ?? DateTime.now;
+  SyncService({
+    required RemoteBackend backend,
+    required AppStorage storage,
+    DateTime Function()? clock,
+  }) : _remote = backend,
+       _outbox = Outbox(storage),
+       _clock = clock ?? DateTime.now;
 
   final RemoteBackend _remote;
   final Outbox _outbox;
@@ -118,11 +122,15 @@ class SyncService extends ChangeNotifier {
       if (_disposed) return false;
       debugPrint('Temple sync: $e');
       _wantPull |= pull;
-      final offline = e is AuthRetryableFetchException || (e is! PostgrestException && e is! AuthException);
+      final offline =
+          e is AuthRetryableFetchException ||
+          (e is! PostgrestException && e is! AuthException);
       _lastError = offline ? null : _describe(e);
       _setStatus(offline ? SyncStatus.offline : SyncStatus.error);
       // Reintenta con espera creciente: 5 s, 10 s, 20 s… hasta 1 min.
-      final wait = Duration(seconds: math.min(60, 5 * (1 << math.min(_attempt, 4))));
+      final wait = Duration(
+        seconds: math.min(60, 5 * (1 << math.min(_attempt, 4))),
+      );
       _attempt++;
       _retryTimer = Timer(wait, () => _run(pull: _wantPull));
       return false;
@@ -132,8 +140,14 @@ class SyncService extends ChangeNotifier {
   Future<void> _push() async {
     final batch = _outbox.changes;
     for (final table in SyncTable.values) {
-      await _send(table, [for (final c in batch) if (c.table == table && !c.isDelete) c]);
-      await _send(table, [for (final c in batch) if (c.table == table && c.isDelete) c]);
+      await _send(table, [
+        for (final c in batch)
+          if (c.table == table && !c.isDelete) c,
+      ]);
+      await _send(table, [
+        for (final c in batch)
+          if (c.table == table && c.isDelete) c,
+      ]);
     }
   }
 
@@ -152,7 +166,9 @@ class SyncService extends ChangeNotifier {
             await _write(table, [c]);
           } on PostgrestException catch (e) {
             if (!_isRejected(e)) rethrow;
-            debugPrint('Temple sync: descartado ${table.table}/${c.key}: ${e.message}');
+            debugPrint(
+              'Temple sync: descartado ${table.table}/${c.key}: ${e.message}',
+            );
             _discarded++;
           }
           _outbox.remove([c]);
@@ -165,7 +181,8 @@ class SyncService extends ChangeNotifier {
     }
   }
 
-  Future<void> _write(SyncTable table, List<Change> changes) => changes.first.isDelete
+  Future<void> _write(SyncTable table, List<Change> changes) =>
+      changes.first.isDelete
       ? _remote.delete(table, [for (final c in changes) c.key])
       : _remote.upsert(table, [for (final c in changes) c.row!]);
 
@@ -176,10 +193,10 @@ class SyncService extends ChangeNotifier {
   }
 
   static String _describe(Object e) => switch (e) {
-        PostgrestException(:final message) => message,
-        AuthException(:final message) => message,
-        _ => '$e',
-      };
+    PostgrestException(:final message) => message,
+    AuthException(:final message) => message,
+    _ => '$e',
+  };
 
   void _setStatus(SyncStatus s) {
     _status = s;

@@ -11,19 +11,24 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.navBackground,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.navBackground,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   final problem = SupabaseConfig.problem;
   if (problem != null) {
     runApp(templeMaterialApp(home: _ConfigError(problem)));
     return;
   }
-  await Supabase.initialize(url: SupabaseConfig.url, publishableKey: SupabaseConfig.key);
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.key,
+  );
   runApp(AuthGate(prefs: await SharedPreferences.getInstance()));
 }
 
@@ -42,9 +47,19 @@ class _ConfigError extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('FALTA CONFIGURAR SUPABASE', style: AppText.display(32, height: 1)),
+              Text(
+                'FALTA CONFIGURAR SUPABASE',
+                style: AppText.display(32, height: 1),
+              ),
               const SizedBox(height: 12),
-              SelectableText(message, style: AppText.body(16, color: AppColors.textSecondary, height: 1.4)),
+              SelectableText(
+                message,
+                style: AppText.body(
+                  16,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
         ),

@@ -15,7 +15,11 @@ import 'progress_screen.dart';
 
 /// 8 · Progreso por ejercicio.
 class ExerciseProgressScreen extends StatefulWidget {
-  const ExerciseProgressScreen({super.key, required this.exerciseId, this.backLabel = 'Progreso'});
+  const ExerciseProgressScreen({
+    super.key,
+    required this.exerciseId,
+    this.backLabel = 'Progreso',
+  });
 
   final String exerciseId;
   final String backLabel;
@@ -34,17 +38,27 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
     final ex = app.exercise(widget.exerciseId)!;
     final analysis = app.analyze(ex);
     final metrics = metricsFor(ex);
-    final metric = metrics.firstWhere((m) => m.id == _metric, orElse: () => metrics.first);
+    final metric = metrics.firstWhere(
+      (m) => m.id == _metric,
+      orElse: () => metrics.first,
+    );
     final sessions = analysis.sessions;
-    final values = [for (final s in sessions) metricValue(ex, s.sets, metric.id)];
+    final values = [
+      for (final s in sessions) metricValue(ex, s.sets, metric.id),
+    ];
     final records = recordFlags(values);
     final n = values.length;
     final sel = _selected != null && _selected! < n ? _selected! : n - 1;
     final today = app.today;
-    String dateText(DateTime d) => daysBetween(d, today) == 0 ? 'Hoy' : shortDate(d);
+    String dateText(DateTime d) =>
+        daysBetween(d, today) == 0 ? 'Hoy' : shortDate(d);
 
-    final delta = n >= 2 ? ((values.last - values.first) * 10).round() / 10 : 0.0;
-    final deltaTrend = delta > 0 ? Trend.up : (delta < 0 ? Trend.down : Trend.flat);
+    final delta = n >= 2
+        ? ((values.last - values.first) * 10).round() / 10
+        : 0.0;
+    final deltaTrend = delta > 0
+        ? Trend.up
+        : (delta < 0 ? Trend.down : Trend.flat);
     final (deltaIcon, deltaColor) = trendStyle(deltaTrend);
     final (statusIcon, statusColor) = trendStyle(analysis.trend);
     final suggestion = analysis.suggestion;
@@ -63,7 +77,10 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      BackPill(label: widget.backLabel, onTap: () => Navigator.pop(context)),
+                      BackPill(
+                        label: widget.backLabel,
+                        onTap: () => Navigator.pop(context),
+                      ),
                       GroupTag(groupLabel(ex.group)),
                     ],
                   ),
@@ -100,26 +117,46 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                                   child: Semantics(
                                     liveRegion: true,
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
-                                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.baseline,
                                           textBaseline: TextBaseline.alphabetic,
                                           children: [
-                                            Text(fmtVal(values[sel]), style: AppText.display(52, height: 0.95)),
+                                            Text(
+                                              fmtVal(values[sel]),
+                                              style: AppText.display(
+                                                52,
+                                                height: 0.95,
+                                              ),
+                                            ),
                                             const SizedBox(width: 6),
-                                            Text(metric.unit,
-                                                style: AppText.body(16, weight: FontWeight.w600, color: AppColors.textSecondary)),
+                                            Text(
+                                              metric.unit,
+                                              style: AppText.body(
+                                                16,
+                                                weight: FontWeight.w600,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                         const SizedBox(height: 4),
-                                        Text('${dateText(sessions[sel].date)} · ${setsText(ex, sessions[sel].sets)}',
-                                            style: AppText.body(13, color: AppColors.textSecondary)),
+                                        Text(
+                                          '${dateText(sessions[sel].date)} · ${setsText(ex, sessions[sel].sets)}',
+                                          style: AppText.body(
+                                            13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
-                                if (records[sel]) const RecordBadge(height: 28, fontSize: 12),
+                                if (records[sel])
+                                  const RecordBadge(height: 28, fontSize: 12),
                               ],
                             ),
                           ),
@@ -128,7 +165,9 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                             values: values,
                             records: records,
                             selected: sel,
-                            labels: [for (final s in sessions) dateText(s.date)],
+                            labels: [
+                              for (final s in sessions) dateText(s.date),
+                            ],
                             unit: metric.unit,
                             onSelect: (i) => setState(() => _selected = i),
                           ),
@@ -141,7 +180,13 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                               children: [
                                 _Legend(filled: true, label: 'Récord'),
                                 _Legend(filled: false, label: 'Sesión'),
-                                Text('Toca un punto para ver la sesión', style: AppText.body(12, color: AppColors.textSecondary)),
+                                Text(
+                                  'Toca un punto para ver la sesión',
+                                  style: AppText.body(
+                                    12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -165,33 +210,63 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                   ] else
                     const EmptyBox(
                       padding: EdgeInsets.all(20),
-                      child: EmptyText('Registra este ejercicio en al menos dos sesiones para ver tu gráfica de progreso.'),
+                      child: EmptyText(
+                        'Registra este ejercicio en al menos dos sesiones para ver tu gráfica de progreso.',
+                      ),
                     ),
                   const SizedBox(height: 14),
                   SurfaceCard(
                     radius: 20,
                     borderWidth: 1.5,
-                    borderColor: analysis.trend == Trend.up ? AppColors.accentSoft(0.45) : AppColors.border,
+                    borderColor: analysis.trend == Trend.up
+                        ? AppColors.accentSoft(0.45)
+                        : AppColors.border,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            AppIcon(statusIcon, size: 18, color: statusColor, strokeWidth: 2.8),
+                            AppIcon(
+                              statusIcon,
+                              size: 18,
+                              color: statusColor,
+                              strokeWidth: 2.8,
+                            ),
                             const SizedBox(width: 8),
-                            Text(analysis.trend.label.toUpperCase(),
-                                style: AppText.label(size: 13, tracking: 0.1, weight: FontWeight.w800, color: AppColors.text)),
+                            Text(
+                              analysis.trend.label.toUpperCase(),
+                              style: AppText.label(
+                                size: 13,
+                                tracking: 0.1,
+                                weight: FontWeight.w800,
+                                color: AppColors.text,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(analysis.statusText, style: AppText.body(15, color: AppColors.textSoft, height: 1.45)),
+                        Text(
+                          analysis.statusText,
+                          style: AppText.body(
+                            15,
+                            color: AppColors.textSoft,
+                            height: 1.45,
+                          ),
+                        ),
                         if (suggestion != null) ...[
                           const SizedBox(height: 12),
                           const Divider(height: 1, color: AppColors.border),
                           const SizedBox(height: 12),
                           const SectionLabel('Para la próxima sesión'),
                           const SizedBox(height: 6),
-                          Text(suggestion, style: AppText.body(15, color: AppColors.textSoft, height: 1.45)),
+                          Text(
+                            suggestion,
+                            style: AppText.body(
+                              15,
+                              color: AppColors.textSoft,
+                              height: 1.45,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -216,7 +291,10 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                     radius: 18,
                     onTap: () {
                       app.addExerciseToDay(day, ex.id);
-                      pushScreen(context, LogExerciseScreen(exerciseId: ex.id, day: day));
+                      pushScreen(
+                        context,
+                        LogExerciseScreen(exerciseId: ex.id, day: day),
+                      );
                     },
                   ),
                 ],
@@ -230,7 +308,11 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
 }
 
 class _MetricSwitch extends StatelessWidget {
-  const _MetricSwitch({required this.metrics, required this.selected, required this.onSelect});
+  const _MetricSwitch({
+    required this.metrics,
+    required this.selected,
+    required this.onSelect,
+  });
   final List<Metric> metrics;
   final MetricId selected;
   final ValueChanged<MetricId> onSelect;
@@ -252,14 +334,21 @@ class _MetricSwitch extends StatelessWidget {
               child: Pressable(
                 onTap: () => onSelect(metrics[i].id),
                 selected: metrics[i].id == selected,
-                color: metrics[i].id == selected ? AppColors.accent : Colors.transparent,
+                color: metrics[i].id == selected
+                    ? AppColors.accent
+                    : Colors.transparent,
                 radius: 10,
                 height: 44,
                 child: Center(
                   child: Text(
                     metrics[i].label,
-                    style: AppText.body(14,
-                        weight: FontWeight.w700, color: metrics[i].id == selected ? AppColors.background : AppColors.textMuted),
+                    style: AppText.body(
+                      14,
+                      weight: FontWeight.w700,
+                      color: metrics[i].id == selected
+                          ? AppColors.background
+                          : AppColors.textMuted,
+                    ),
                   ),
                 ),
               ),
@@ -287,7 +376,9 @@ class _Legend extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: filled ? AppColors.accent : null,
-            border: filled ? null : Border.all(color: AppColors.accent, width: 2),
+            border: filled
+                ? null
+                : Border.all(color: AppColors.accent, width: 2),
           ),
         ),
         const SizedBox(width: 6),
@@ -298,7 +389,13 @@ class _Legend extends StatelessWidget {
 }
 
 class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.date, required this.isToday, required this.summary, required this.value, required this.record});
+  const _HistoryRow({
+    required this.date,
+    required this.isToday,
+    required this.summary,
+    required this.value,
+    required this.record,
+  });
   final String date;
   final bool isToday;
   final String summary;
@@ -309,20 +406,35 @@ class _HistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.line))),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.line)),
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(date, style: AppText.body(14, weight: FontWeight.w700, color: isToday ? AppColors.accent : AppColors.text)),
+                Text(
+                  date,
+                  style: AppText.body(
+                    14,
+                    weight: FontWeight.w700,
+                    color: isToday ? AppColors.accent : AppColors.text,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(summary, style: AppText.body(13, color: AppColors.textSecondary)),
+                Text(
+                  summary,
+                  style: AppText.body(13, color: AppColors.textSecondary),
+                ),
               ],
             ),
           ),
-          if (record) ...[const RecordBadge(label: 'PR', outlined: true), const SizedBox(width: 12)],
+          if (record) ...[
+            const RecordBadge(label: 'PR', outlined: true),
+            const SizedBox(width: 12),
+          ],
           Text(value, style: AppText.display(22, weight: FontWeight.w700)),
         ],
       ),
@@ -352,66 +464,95 @@ class _ProgressChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, c) {
-      final width = c.maxWidth;
-      final geo = _ChartGeometry(values, width - 18);
-      final n = values.length;
-      final xIdx = {0, (n - 1) ~/ 2, n - 1}.toList();
+    return LayoutBuilder(
+      builder: (context, c) {
+        final width = c.maxWidth;
+        final geo = _ChartGeometry(values, width - 18);
+        final n = values.length;
+        final xIdx = {0, (n - 1) ~/ 2, n - 1}.toList();
 
-      return SizedBox(
-        height: _height,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(child: CustomPaint(painter: _ChartPainter(geo))),
-            for (final t in const [0.0, 0.5, 1.0])
-              Positioned(
-                left: 0,
-                width: 34,
-                top: geo.y(geo.lo + t * (geo.hi - geo.lo)) - 8,
-                child: Text(geo.tick(geo.lo + t * (geo.hi - geo.lo)),
-                    textAlign: TextAlign.right, style: AppText.body(11, weight: FontWeight.w600, color: AppColors.textSecondary)),
-              ),
-            for (final i in xIdx)
-              Positioned(
-                top: 172,
-                left: (geo.x(i) - 30).clamp(10, width - 70),
-                width: 60,
-                child: Text(labels[i],
-                    textAlign: TextAlign.center, style: AppText.body(11, weight: FontWeight.w600, color: AppColors.textSecondary)),
-              ),
-            for (var i = 0; i < n; i++)
-              Positioned(
-                left: geo.x(i) - 16,
-                top: geo.y(values[i]) - 16,
-                width: 32,
-                height: 32,
-                child: Semantics(
-                  button: true,
-                  selected: i == selected,
-                  label: '${labels[i]}: ${fmtVal(values[i])} $unit${records[i] ? ', récord' : ''}',
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => onSelect(i),
-                    child: Center(
-                      child: Container(
-                        width: i == selected ? 16 : 10,
-                        height: i == selected ? 16 : 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: i == selected || records[i] ? AppColors.accent : AppColors.surface,
-                          border: Border.all(color: i == selected ? AppColors.text : AppColors.accent, width: 2),
-                          boxShadow: const [BoxShadow(color: AppColors.surface, spreadRadius: 2)],
+        return SizedBox(
+          height: _height,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: CustomPaint(painter: _ChartPainter(geo))),
+              for (final t in const [0.0, 0.5, 1.0])
+                Positioned(
+                  left: 0,
+                  width: 34,
+                  top: geo.y(geo.lo + t * (geo.hi - geo.lo)) - 8,
+                  child: Text(
+                    geo.tick(geo.lo + t * (geo.hi - geo.lo)),
+                    textAlign: TextAlign.right,
+                    style: AppText.body(
+                      11,
+                      weight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              for (final i in xIdx)
+                Positioned(
+                  top: 172,
+                  left: (geo.x(i) - 30).clamp(10, width - 70),
+                  width: 60,
+                  child: Text(
+                    labels[i],
+                    textAlign: TextAlign.center,
+                    style: AppText.body(
+                      11,
+                      weight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              for (var i = 0; i < n; i++)
+                Positioned(
+                  left: geo.x(i) - 16,
+                  top: geo.y(values[i]) - 16,
+                  width: 32,
+                  height: 32,
+                  child: Semantics(
+                    button: true,
+                    selected: i == selected,
+                    label:
+                        '${labels[i]}: ${fmtVal(values[i])} $unit${records[i] ? ', récord' : ''}',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onSelect(i),
+                      child: Center(
+                        child: Container(
+                          width: i == selected ? 16 : 10,
+                          height: i == selected ? 16 : 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == selected || records[i]
+                                ? AppColors.accent
+                                : AppColors.surface,
+                            border: Border.all(
+                              color: i == selected
+                                  ? AppColors.text
+                                  : AppColors.accent,
+                              width: 2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: AppColors.surface,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      );
-    });
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -429,7 +570,8 @@ class _ChartGeometry {
 
   double x(int i) => values.length < 2
       ? (_ProgressChart._x0 + x1) / 2
-      : _ProgressChart._x0 + i * (x1 - _ProgressChart._x0) / (values.length - 1);
+      : _ProgressChart._x0 +
+            i * (x1 - _ProgressChart._x0) / (values.length - 1);
 
   double y(double v) {
     const y0 = _ProgressChart._y0, y1 = _ProgressChart._y1;
@@ -437,7 +579,8 @@ class _ChartGeometry {
     return y1 - (v - lo) / span * (y1 - y0);
   }
 
-  String tick(double v) => v >= 1000 ? thousands(v) : (v >= 20 ? '${v.round()}' : fmtNum(v));
+  String tick(double v) =>
+      v >= 1000 ? thousands(v) : (v >= 20 ? '${v.round()}' : fmtNum(v));
 }
 
 class _ChartPainter extends CustomPainter {
@@ -451,12 +594,23 @@ class _ChartPainter extends CustomPainter {
       ..strokeWidth = 1;
     for (final t in const [0.0, 0.5, 1.0]) {
       final y = geo.y(geo.lo + t * (geo.hi - geo.lo)).roundToDouble();
-      canvas.drawLine(Offset(_ProgressChart._x0, y), Offset(size.width - 10, y), grid);
+      canvas.drawLine(
+        Offset(_ProgressChart._x0, y),
+        Offset(size.width - 10, y),
+        grid,
+      );
     }
-    final pts = [for (var i = 0; i < geo.values.length; i++) Offset(geo.x(i), geo.y(geo.values[i]))];
+    final pts = [
+      for (var i = 0; i < geo.values.length; i++)
+        Offset(geo.x(i), geo.y(geo.values[i])),
+    ];
     final line = Path()..addPolygon(pts, false);
     final area = Path()
-      ..addPolygon([...pts, Offset(pts.last.dx, _ProgressChart._y1), Offset(pts.first.dx, _ProgressChart._y1)], true);
+      ..addPolygon([
+        ...pts,
+        Offset(pts.last.dx, _ProgressChart._y1),
+        Offset(pts.first.dx, _ProgressChart._y1),
+      ], true);
     canvas.drawPath(area, Paint()..color = AppColors.accentSoft(0.1));
     canvas.drawPath(
       line,

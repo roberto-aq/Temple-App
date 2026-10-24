@@ -15,7 +15,17 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     await loader.load();
   }
 
-  await load('Barlow', ['Barlow-Regular.ttf', 'Barlow-Medium.ttf', 'Barlow-SemiBold.ttf', 'Barlow-Bold.ttf', 'Barlow-ExtraBold.ttf']);
-  await load('BarlowCondensed', ['BarlowCondensed-SemiBold.ttf', 'BarlowCondensed-Bold.ttf', 'BarlowCondensed-ExtraBold.ttf']);
+  await load('Barlow', [
+    'Barlow-Regular.ttf',
+    'Barlow-Medium.ttf',
+    'Barlow-SemiBold.ttf',
+    'Barlow-Bold.ttf',
+    'Barlow-ExtraBold.ttf',
+  ]);
+  await load('BarlowCondensed', [
+    'BarlowCondensed-SemiBold.ttf',
+    'BarlowCondensed-Bold.ttf',
+    'BarlowCondensed-ExtraBold.ttf',
+  ]);
   await testMain();
 }
