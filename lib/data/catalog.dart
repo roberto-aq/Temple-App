@@ -11,6 +11,7 @@ const muscleGroups = <MuscleGroup>[
   MuscleGroup('piernas', 'Piernas'),
   MuscleGroup('pantorrillas', 'Pantorrillas'),
   MuscleGroup('core', 'Core'),
+  MuscleGroup('cardio', 'Cardio'),
 ];
 
 String groupLabel(String id) {

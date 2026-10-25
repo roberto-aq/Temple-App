@@ -131,11 +131,11 @@ void main() {
         'user_id': userA.id,
         'day': '2026-10-23',
         'exercise_id': 'curl',
-        'reps': 999,
+        'reps': 20000,
       }),
       throwsA(isA<PostgrestException>().having((e) => e.code, 'code', '23514')),
     );
-    print('✓ Valores fuera de rango rechazados (reps > 300)');
+    print('✓ Valores fuera de rango rechazados (más de 3 horas)');
 
     // --- Cuenta B: no ve ni toca nada de A ---------------------------------------
     final (b, userB) = await signUp('b');

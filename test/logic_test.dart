@@ -79,6 +79,17 @@ void main() {
       expect(durationText(45), '45 seg');
       expect(durationText(120), '2 min');
     });
+
+    test('series por tiempo en segundos o minutos', () {
+      expect(setsText(plank, repSets([1200, 900])), '20, 15 min');
+      expect(setsText(plank, repSets([90, 45])), '1 min 30 seg, 45 seg');
+      expect(setLabel(plank, const SetEntry(reps: 300)), '5 min');
+      expect(amountParts(plank, 90), [('1', 'min'), ('30', 'seg')]);
+      expect(amountParts(plank, 45), [('45', 'seg')]);
+      expect(amountParts(pullups, 12), [('12', 'reps')]);
+      expect(plank.maxReps, 10800);
+      expect(pullups.maxReps, 300);
+    });
   });
 
   group('superar la última vez', () {
@@ -221,7 +232,7 @@ void main() {
         ExerciseAnalysis(plank, [
           ExerciseSession(today, repSets([40, 40])),
         ], today).suggestion,
-        'Intenta aguantar 45 segundos por serie.',
+        'Intenta aguantar 45 seg por serie.',
       );
     });
 

@@ -369,7 +369,12 @@ class _ExerciseRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(fmtVal(a.last), style: AppText.display(28, height: 1)),
+                  Text(
+                    a.mainMetric.isTime
+                        ? durationText(a.last.round())
+                        : fmtVal(a.last),
+                    style: AppText.display(28, height: 1),
+                  ),
                   Text(
                     a.mainMetric.label,
                     style: AppText.body(

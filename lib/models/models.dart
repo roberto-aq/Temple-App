@@ -44,6 +44,9 @@ class Exercise {
   /// Paso de los botones +/− de repeticiones o segundos.
   int get step => timed ? 5 : 1;
 
+  /// Máximo por serie: 300 repeticiones o 3 horas (en segundos).
+  int get maxReps => timed ? 3 * 3600 : 300;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,

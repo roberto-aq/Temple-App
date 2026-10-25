@@ -21,6 +21,9 @@ SetEntry? bestSet(Exercise ex, List<SetEntry> sets) {
 /// Incremento de peso sugerido: 2,5 kg desde 30 kg, 1 kg por debajo.
 double weightStep(double kg) => kg >= 30 ? 2.5 : 1;
 
+/// Incremento de tiempo sugerido: 5 s hasta 2 min, luego 1 min.
+int timeStep(int seconds) => seconds < 120 ? 5 : 60;
+
 // ---------------------------------------------------------------------------
 // Comparación serie a serie con la última vez
 // ---------------------------------------------------------------------------
@@ -85,7 +88,8 @@ BeatInfo? beatInfo(
     );
   }
   if (ex.timed) {
-    return BeatInfo(BeatState.target, '${pBest.reps + 5} seg en una serie');
+    final next = pBest.reps + timeStep(pBest.reps);
+    return BeatInfo(BeatState.target, '${durationText(next)} en una serie');
   }
   return BeatInfo(BeatState.target, '${pBest.reps + 1} reps en una serie');
 }
@@ -102,6 +106,27 @@ class Metric {
   final String label;
   final String long;
   final String unit;
+
+  bool get isTime => unit == 'seg';
+
+  /// Un valor con su unidad: «62,5 kg», «45 reps» o «2 min 15 seg».
+  String format(num v) =>
+      isTime ? durationText(v.round()) : '${fmtVal(v)} $unit';
+
+  /// Una diferencia con signo: «+2,5 kg» o «+1 min».
+  String formatDelta(num d) {
+    if (!isTime) return '${d > 0 ? '+' : ''}${format(d)}';
+    return '${d > 0 ? '+' : (d < 0 ? '-' : '')}${format(d.abs())}';
+  }
+
+  /// Valor y unidad por separado, para mostrarlos en grande: («62,5», «kg»).
+  (String, String) parts(num v) {
+    if (!isTime) return (fmtVal(v), unit);
+    final s = v.round();
+    if (s < 60) return ('$s', 'seg');
+    if (s % 60 == 0) return ('${s ~/ 60}', 'min');
+    return ('${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}', 'min');
+  }
 }
 
 List<Metric> metricsFor(Exercise ex) {
@@ -248,11 +273,10 @@ class ExerciseAnalysis {
 
   /// Línea corta de la lista de Progreso.
   String get detail {
-    final unit = mainMetric.unit;
     switch (trend) {
       case Trend.up:
-        final d = last - first;
-        return '${d >= 0 ? '+' : ''}${fmtVal(d)} $unit en $weeks ${plural(weeks, 'semana', 'semanas')}';
+        final d = mainMetric.formatDelta(last - first);
+        return '$d en $weeks ${plural(weeks, 'semana', 'semanas')}';
       case Trend.flat:
         return '$since sesiones sin superar tu récord';
       case Trend.down:
@@ -268,15 +292,15 @@ class ExerciseAnalysis {
     switch (trend) {
       case Trend.up:
         return since == 0
-            ? 'Superaste tu récord en la última sesión (${fmtVal(best)} ${m.unit} de ${m.long}). '
+            ? 'Superaste tu récord en la última sesión (${m.format(best)} de ${m.long}). '
                   'Así funciona la sobrecarga progresiva: un poco más cada vez.'
             : 'Tu último récord fue hace $since ${plural(since, 'sesión', 'sesiones')}. Vas por buen camino.';
       case Trend.flat:
-        return 'Llevas $since sesiones sin superar tu récord de ${fmtVal(best)} ${m.unit} (${m.long}). '
+        return 'Llevas $since sesiones sin superar tu récord de ${m.format(best)} (${m.long}). '
             'Cambia una variable: más peso, una repetición más o una serie extra.';
       case Trend.down:
         return 'Tu última sesión quedó un ${((1 - last / best) * 100).round()} % por debajo de tu récord de '
-            '${fmtVal(best)} ${m.unit}. Puede ser cansancio: revisa descanso, sueño y técnica.';
+            '${m.format(best)}. Puede ser cansancio: revisa descanso, sueño y técnica.';
       case Trend.fresh:
         return 'Registra este ejercicio en al menos dos sesiones para saber si estás progresando.';
     }
@@ -298,8 +322,8 @@ class ExerciseAnalysis {
     }
     if (ex.timed) {
       return mn == mx
-          ? 'Intenta aguantar ${mx + 5} segundos por serie.'
-          : 'Intenta llegar a $mx segundos en todas las series.';
+          ? 'Intenta aguantar ${durationText(mx + timeStep(mx))} por serie.'
+          : 'Intenta llegar a ${durationText(mx)} en todas las series.';
     }
     return mn == mx
         ? 'Intenta ${mx + 1} reps por serie, o agrega peso si ya te resulta fácil.'

@@ -107,6 +107,7 @@ String longDate(DateTime d) =>
 String unitWord(Exercise ex) => ex.timed ? 'seg' : 'reps';
 
 /// Resumen de series: «60 kg × 8, 8, 7» o «8 × 60 kg · 6 × 65 kg» o «15, 14 reps».
+/// Por tiempo: «45, 40 seg», «20, 15 min» o «1 min 30 seg, 45 seg».
 String setsText(Exercise ex, List<SetEntry> sets) {
   final reps = sets.map((s) => s.reps).join(', ');
   if (ex.weighted) {
@@ -116,13 +117,31 @@ String setsText(Exercise ex, List<SetEntry> sets) {
     }
     return sets.map((s) => '${s.reps} × ${fmtNum(s.kg ?? 0)} kg').join(' · ');
   }
+  if (ex.timed && sets.any((s) => s.reps >= 60)) {
+    if (sets.every((s) => s.reps % 60 == 0)) {
+      return '${sets.map((s) => s.reps ~/ 60).join(', ')} min';
+    }
+    return sets.map((s) => durationText(s.reps)).join(', ');
+  }
   return '$reps ${unitWord(ex)}';
 }
 
-/// Una serie: «62,5 kg × 8» o «45 seg».
+/// Una serie: «62,5 kg × 8», «12 reps» o «1 min 30 seg».
 String setLabel(Exercise ex, SetEntry s) => ex.weighted
     ? '${fmtNum(s.kg ?? 0)} kg × ${s.reps}'
-    : '${s.reps} ${unitWord(ex)}';
+    : amountText(ex, s.reps);
+
+/// Repeticiones o tiempo de una serie, sin el peso: «12 reps» o «20 min».
+String amountText(Exercise ex, int reps) =>
+    ex.timed ? durationText(reps) : '$reps reps';
+
+/// Las partes de una serie para mostrarlas en grande con su unidad:
+/// [(«12», «reps»)] o, por tiempo, [(«1», «min»), («30», «seg»)].
+List<(String, String)> amountParts(Exercise ex, int reps) {
+  if (!ex.timed) return [('$reps', 'reps')];
+  final m = reps ~/ 60, s = reps % 60;
+  return [if (m > 0) ('$m', 'min'), if (s > 0 || m == 0) ('$s', 'seg')];
+}
 
 /// Total de las series: «45 reps» o, por tiempo, «2 min 15 seg».
 String setsTotal(Exercise ex, List<SetEntry> sets) {

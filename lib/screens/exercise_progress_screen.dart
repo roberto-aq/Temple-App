@@ -126,7 +126,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                                           textBaseline: TextBaseline.alphabetic,
                                           children: [
                                             Text(
-                                              fmtVal(values[sel]),
+                                              metric.parts(values[sel]).$1,
                                               style: AppText.display(
                                                 52,
                                                 height: 0.95,
@@ -134,7 +134,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              metric.unit,
+                                              metric.parts(values[sel]).$2,
                                               style: AppText.body(
                                                 16,
                                                 weight: FontWeight.w600,
@@ -168,7 +168,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                             labels: [
                               for (final s in sessions) dateText(s.date),
                             ],
-                            unit: metric.unit,
+                            metric: metric,
                             onSelect: (i) => setState(() => _selected = i),
                           ),
                           Padding(
@@ -200,7 +200,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '${delta > 0 ? '+' : ''}${fmtVal(delta)} ${metric.unit} de ${metric.long} en ${analysis.weeks} '
+                            '${metric.formatDelta(delta)} de ${metric.long} en ${analysis.weeks} '
                             '${plural(analysis.weeks, 'semana', 'semanas')}',
                             style: AppText.body(15, weight: FontWeight.w600),
                           ),
@@ -280,7 +280,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
                         date: dateText(sessions[i].date),
                         isToday: daysBetween(sessions[i].date, today) == 0,
                         summary: setsText(ex, sessions[i].sets),
-                        value: '${fmtVal(values[i])} ${metric.unit}',
+                        value: metric.format(values[i]),
                         record: records[i],
                       ),
                   ],
@@ -449,7 +449,7 @@ class _ProgressChart extends StatelessWidget {
     required this.records,
     required this.selected,
     required this.labels,
-    required this.unit,
+    required this.metric,
     required this.onSelect,
   });
 
@@ -457,7 +457,7 @@ class _ProgressChart extends StatelessWidget {
   final List<bool> records;
   final int selected;
   final List<String> labels;
-  final String unit;
+  final Metric metric;
   final ValueChanged<int> onSelect;
 
   static const _height = 196.0, _x0 = 40.0, _y0 = 18.0, _y1 = 158.0;
@@ -483,7 +483,7 @@ class _ProgressChart extends StatelessWidget {
                   width: 34,
                   top: geo.y(geo.lo + t * (geo.hi - geo.lo)) - 8,
                   child: Text(
-                    geo.tick(geo.lo + t * (geo.hi - geo.lo)),
+                    geo.tick(geo.lo + t * (geo.hi - geo.lo), metric.isTime),
                     textAlign: TextAlign.right,
                     style: AppText.body(
                       11,
@@ -517,7 +517,7 @@ class _ProgressChart extends StatelessWidget {
                     button: true,
                     selected: i == selected,
                     label:
-                        '${labels[i]}: ${fmtVal(values[i])} $unit${records[i] ? ', récord' : ''}',
+                        '${labels[i]}: ${metric.format(values[i])}${records[i] ? ', récord' : ''}',
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => onSelect(i),
@@ -579,8 +579,15 @@ class _ChartGeometry {
     return y1 - (v - lo) / span * (y1 - y0);
   }
 
-  String tick(double v) =>
-      v >= 1000 ? thousands(v) : (v >= 20 ? '${v.round()}' : fmtNum(v));
+  /// Etiqueta del eje: «62,5», «1.200» o, por tiempo, «45s» y «20:30».
+  String tick(double v, bool time) {
+    if (time) {
+      final s = v.round();
+      if (s < 60) return '${s}s';
+      return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+    }
+    return v >= 1000 ? thousands(v) : (v >= 20 ? '${v.round()}' : fmtNum(v));
+  }
 }
 
 class _ChartPainter extends CustomPainter {

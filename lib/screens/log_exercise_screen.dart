@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -33,10 +35,16 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
   final _repsFocus = FocusNode();
   final _kgFocus = FocusNode();
 
+  /// Repeticiones o, en ejercicios por tiempo, segundos (también en minutos).
   int _reps = 10;
   double _kg = 0;
   int? _editIdx;
   bool _initialized = false;
+
+  /// Ejercicio por tiempo y, si lo es, si se escribe en minutos.
+  bool _timed = false;
+  bool _minutes = false;
+  int _max = 300;
 
   @override
   void initState() {
@@ -54,14 +62,23 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     final ex = app.exercise(widget.exerciseId)!;
     final logged = app.setsOn(widget.day, ex.id);
     final prev = app.previousSession(ex.id, widget.day);
-    if (logged.isNotEmpty) {
-      _setDraft(logged.last.reps, logged.last.kg ?? 0);
-    } else if (prev != null && prev.sets.isNotEmpty) {
-      _setDraft(prev.sets.first.reps, prev.sets.first.kg ?? 0);
+    final last = logged.isNotEmpty
+        ? logged.last
+        : (prev != null && prev.sets.isNotEmpty ? prev.sets.first : null);
+    _timed = ex.timed;
+    _max = ex.maxReps;
+    // Se abre en la unidad de la última serie; sin series, cardio en minutos.
+    _minutes =
+        _timed &&
+        (last == null ? ex.group == 'cardio' : _wholeMinutes(last.reps));
+    if (last != null) {
+      _setDraft(last.reps, last.kg ?? 0);
     } else {
-      _setDraft(ex.timed ? 30 : 10, ex.weighted ? 20 : 0);
+      _setDraft(ex.timed ? (_minutes ? 600 : 30) : 10, ex.weighted ? 20 : 0);
     }
   }
+
+  static bool _wholeMinutes(int seconds) => seconds >= 60 && seconds % 60 == 0;
 
   @override
   void dispose() {
@@ -75,8 +92,19 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
   void _setDraft(int reps, double kg) {
     _reps = reps;
     _kg = kg;
-    _repsCtrl.text = '$reps';
+    _repsCtrl.text = _minutes ? '${reps ~/ 60}' : '$reps';
     _kgCtrl.text = fmtNum(kg);
+  }
+
+  /// Cambia entre segundos y minutos; en minutos redondea al minuto.
+  void _setUnit(bool minutes) {
+    if (minutes == _minutes) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _minutes = minutes;
+      if (minutes) _reps = math.max(1, (_reps / 60).round()) * 60;
+      _setDraft(math.min(_reps, _max), _kg);
+    });
   }
 
   void _onFocusChange(FocusNode node, TextEditingController ctrl) {
@@ -94,7 +122,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
 
   void _onRepsChanged(String v) {
     final n = int.tryParse(v);
-    if (n != null && n > 0) _reps = n > 300 ? 300 : n;
+    if (n != null && n > 0) _reps = math.min(_minutes ? n * 60 : n, _max);
   }
 
   void _onKgChanged(String v) {
@@ -106,7 +134,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     FocusScope.of(context).unfocus();
     setState(
       () => _setDraft(
-        (_reps + reps).clamp(step, 300),
+        (_reps + reps).clamp(step, _max),
         (_kg + kg).clamp(0, 500).toDouble(),
       ),
     );
@@ -131,6 +159,8 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
         _editIdx = null;
       } else {
         _editIdx = i;
+        // Una serie con segundos sueltos solo se puede editar en segundos.
+        if (_minutes && !_wholeMinutes(s.reps)) _minutes = false;
         _setDraft(s.reps, s.kg ?? 0);
       }
     });
@@ -169,6 +199,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     final beat = beatInfo(ex, prev, logged, app.priorBest(ex, day));
     final editing = _editIdx != null && _editIdx! < logged.length;
     final nextId = logged.isNotEmpty ? _nextExercise(app) : null;
+    final repStep = _minutes ? 60 : ex.step;
     final dayWord = app.dayWord(day);
 
     return Scaffold(
@@ -269,16 +300,29 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                     children: [
                       Expanded(
                         child: _Counter(
-                          label: ex.timed ? 'Segundos' : 'Repeticiones',
+                          label: !_timed
+                              ? 'Repeticiones'
+                              : (_minutes ? 'Minutos' : 'Segundos'),
+                          header: _timed
+                              ? _UnitToggle(
+                                  minutes: _minutes,
+                                  onChanged: _setUnit,
+                                )
+                              : null,
+                          maxLength: _timed && !_minutes ? 5 : 3,
                           controller: _repsCtrl,
                           focusNode: _repsFocus,
                           highlighted: editing,
                           decimal: false,
                           onChanged: _onRepsChanged,
-                          onMinus: () => _bump(reps: -ex.step, step: ex.step),
-                          onPlus: () => _bump(reps: ex.step, step: ex.step),
-                          minusLabel: 'Restar repeticiones',
-                          plusLabel: 'Sumar repeticiones',
+                          onMinus: () => _bump(reps: -repStep, step: repStep),
+                          onPlus: () => _bump(reps: repStep, step: repStep),
+                          minusLabel: _timed
+                              ? 'Restar tiempo'
+                              : 'Restar repeticiones',
+                          plusLabel: _timed
+                              ? 'Sumar tiempo'
+                              : 'Sumar repeticiones',
                         ),
                       ),
                       if (ex.weighted) ...[
@@ -441,7 +485,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                                     ),
                                   ),
                                   Text(
-                                    '${prev.sets[i].reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(prev.sets[i].kg ?? 0)} kg' : ''}',
+                                    '${amountText(ex, prev.sets[i].reps)}${ex.weighted ? ' · ${fmtNum(prev.sets[i].kg ?? 0)} kg' : ''}',
                                     style: AppText.display(
                                       22,
                                       weight: FontWeight.w700,
@@ -567,9 +611,17 @@ class _Counter extends StatelessWidget {
     required this.onPlus,
     required this.minusLabel,
     required this.plusLabel,
+    this.header,
+    this.maxLength = 3,
   });
 
   final String label;
+
+  /// Reemplaza el título (p. ej. el selector de segundos o minutos).
+  final Widget? header;
+
+  /// Cifras que admite el campo entero.
+  final int maxLength;
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool highlighted;
@@ -594,7 +646,7 @@ class _Counter extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(label.toUpperCase(), style: AppText.label()),
+          header ?? Text(label.toUpperCase(), style: AppText.label()),
           const SizedBox(height: 6),
           ListenableBuilder(
             listenable: focusNode,
@@ -624,7 +676,7 @@ class _Counter extends StatelessWidget {
                       ? [_KgFormatter()]
                       : [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3),
+                          LengthLimitingTextInputFormatter(maxLength),
                         ],
                   style: AppText.display(76, height: 1),
                   decoration: InputDecoration(
@@ -659,6 +711,50 @@ class _Counter extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Selector «SEGUNDOS | MINUTOS» de los ejercicios por tiempo.
+class _UnitToggle extends StatelessWidget {
+  const _UnitToggle({required this.minutes, required this.onChanged});
+  final bool minutes;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget option(String text, bool value) {
+      final on = minutes == value;
+      return Pressable(
+        onTap: () => onChanged(value),
+        color: on ? AppColors.accent : Colors.transparent,
+        radius: 99,
+        height: 28,
+        selected: on,
+        semanticLabel: 'Registrar en ${text.toLowerCase()}',
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Center(
+          child: Text(
+            text,
+            style: AppText.label(
+              color: on ? AppColors.background : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.control,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.borderStrong),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [option('SEGUNDOS', false), option('MINUTOS', true)],
       ),
     );
   }
@@ -805,7 +901,7 @@ class _LoggedSetRow extends StatelessWidget {
       numColor = AppColors.textFaint;
     }
     final main =
-        '${entry.reps} ${unitWord(ex)}${ex.weighted ? ' · ${fmtNum(entry.kg ?? 0)} kg' : ''}';
+        '${amountText(ex, entry.reps)}${ex.weighted ? ' · ${fmtNum(entry.kg ?? 0)} kg' : ''}';
     final big = AppText.display(32, height: 1);
     final small = AppText.display(
       15,
@@ -870,9 +966,15 @@ class _LoggedSetRow extends StatelessWidget {
                               ),
                             ),
                           ],
-                          Text('${entry.reps}', style: big),
-                          const SizedBox(width: 4),
-                          Text(unitWord(ex), style: small),
+                          for (final (i, (value, unit)) in amountParts(
+                            ex,
+                            entry.reps,
+                          ).indexed) ...[
+                            if (i > 0) const SizedBox(width: 10),
+                            Text(value, style: big),
+                            const SizedBox(width: 4),
+                            Text(unit, style: small),
+                          ],
                         ],
                       ),
                     ),

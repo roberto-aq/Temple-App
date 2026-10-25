@@ -39,8 +39,8 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
     ),
     (
       ExerciseKind.seconds,
-      'Tiempo (segundos)',
-      'Ej. plancha, sentadilla isométrica',
+      'Tiempo (segundos o minutos)',
+      'Ej. plancha, bicicleta estática',
     ),
   ];
 
