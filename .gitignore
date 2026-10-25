@@ -51,3 +51,6 @@ app.*.map.json
 
 # Caché de la CLI de Supabase
 supabase/.temp/
+
+# Configuración local de Flutter DevTools
+devtools_options.yaml
