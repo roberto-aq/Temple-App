@@ -78,14 +78,15 @@ class TodayScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: _Stat(
-                    value: '$setsDone',
-                    label: 'Series',
+                    value: '$exDone',
+                    of: exDone < session.length ? session.length : null,
+                    label: 'Ejercicios',
                     accent: true,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _Stat(value: '$exDone', label: 'Ejercicios'),
+                  child: _Stat(value: '$setsDone', label: 'Series'),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -381,9 +382,17 @@ class _EmptySession extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label, this.accent = false});
+  const _Stat({
+    required this.value,
+    required this.label,
+    this.of,
+    this.accent = false,
+  });
   final String value;
   final String label;
+
+  /// Total previsto, más pequeño junto al valor: «2/5».
+  final int? of;
   final bool accent;
 
   @override
@@ -391,12 +400,26 @@ class _Stat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value,
-          style: AppText.display(
-            56,
-            height: 0.9,
-            color: accent ? AppColors.accent : AppColors.text,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text.rich(
+            TextSpan(
+              text: value,
+              children: [
+                if (of != null)
+                  TextSpan(
+                    text: '/$of',
+                    style: AppText.display(32, color: AppColors.textSecondary),
+                  ),
+              ],
+            ),
+            semanticsLabel: of == null ? null : '$value de $of',
+            style: AppText.display(
+              56,
+              height: 0.9,
+              color: accent ? AppColors.accent : AppColors.text,
+            ),
           ),
         ),
         const SizedBox(height: 4),
