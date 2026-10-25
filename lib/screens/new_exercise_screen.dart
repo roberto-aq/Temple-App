@@ -2,33 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/catalog.dart';
+import '../logic/format.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/ui.dart';
 
-/// 6 · Crear ejercicio. Devuelve el [Exercise] creado al cerrar.
+/// 6 · Crear ejercicio, o editar uno propio si se pasa [exercise].
+/// Devuelve el [Exercise] creado o editado al cerrar (null si se eliminó).
 class NewExerciseScreen extends StatefulWidget {
   const NewExerciseScreen({
     super.key,
     this.initialName = '',
     this.initialGroup,
     this.saveLabel = 'Guardar ejercicio',
+    this.exercise,
   });
 
   final String initialName;
   final String? initialGroup;
   final String saveLabel;
 
+  /// Ejercicio propio a editar: solo cambian el nombre y el grupo.
+  final Exercise? exercise;
+
   @override
   State<NewExerciseScreen> createState() => _NewExerciseScreenState();
 }
 
 class _NewExerciseScreenState extends State<NewExerciseScreen> {
-  late final _name = TextEditingController(text: widget.initialName);
-  late String? _group = widget.initialGroup;
-  ExerciseKind _kind = ExerciseKind.weight;
+  late final _editing = widget.exercise;
+  late final _name = TextEditingController(
+    text: _editing?.name ?? widget.initialName,
+  );
+  late String? _group = _editing?.group ?? widget.initialGroup;
+  late ExerciseKind _kind = _editing?.kind ?? ExerciseKind.weight;
   String? _error;
+  bool _confirmDelete = false;
 
   static const _kinds = [
     (ExerciseKind.weight, 'Repeticiones y peso', 'Ej. press, sentadilla, curl'),
@@ -58,22 +69,34 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
       error = 'Ponle un nombre al ejercicio.';
     } else if (_group == null) {
       error = 'Elige el grupo muscular.';
-    } else if (app.exerciseNameExists(name)) {
+    } else if (app.exerciseNameExists(name, except: _editing?.id)) {
       error = 'Ya tienes un ejercicio con ese nombre.';
     }
     if (error != null) {
       setState(() => _error = error);
       return;
     }
+    final editing = _editing;
     Navigator.pop(
       context,
-      app.createExercise(name: name, group: _group!, kind: _kind),
+      editing == null
+          ? app.createExercise(name: name, group: _group!, kind: _kind)
+          : app.updateExercise(editing.id, name: name, group: _group!),
     );
+  }
+
+  void _delete() {
+    final app = AppScope.read(context);
+    final ex = _editing!;
+    app.deleteExercise(ex.id);
+    app.flash('«${ex.name}» eliminado.', ToastTarget.library);
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final nameError = _error != null && _name.text.trim().isEmpty;
+    final editing = _editing;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -88,7 +111,10 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                     label: 'Cancelar',
                     onTap: () => Navigator.pop(context),
                   ),
-                  const SectionLabel('Nuevo ejercicio', size: 13),
+                  SectionLabel(
+                    editing == null ? 'Nuevo ejercicio' : 'Editar ejercicio',
+                    size: 13,
+                  ),
                 ],
               ),
             ),
@@ -102,7 +128,7 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                     controller: _name,
                     hint: 'Ej. Hip thrust',
                     error: nameError,
-                    autofocus: widget.initialName.isEmpty,
+                    autofocus: editing == null && widget.initialName.isEmpty,
                     onChanged: (_) => setState(() => _error = null),
                   ),
                   const SizedBox(height: 22),
@@ -149,25 +175,136 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                   const SizedBox(height: 22),
                   const SectionLabel('Qué vas a registrar'),
                   const SizedBox(height: 8),
-                  for (final (kind, title, sub) in _kinds) ...[
-                    _KindOption(
-                      title: title,
-                      subtitle: sub,
-                      selected: _kind == kind,
-                      onTap: () => setState(() {
-                        _kind = kind;
-                        _error = null;
-                      }),
-                    ),
-                    const SizedBox(height: 8),
+                  for (final (kind, title, sub) in _kinds)
+                    // Al editar solo se muestra el tipo elegido, sin poder cambiarlo.
+                    if (editing == null || kind == _kind) ...[
+                      _KindOption(
+                        title: title,
+                        subtitle: editing == null
+                            ? sub
+                            : 'No se puede cambiar: tus series se registraron así.',
+                        selected: _kind == kind,
+                        onTap: editing != null
+                            ? null
+                            : () => setState(() {
+                                _kind = kind;
+                                _error = null;
+                              }),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  if (editing != null) ...[
+                    const SizedBox(height: 22),
+                    if (!_confirmDelete)
+                      SecondaryButton(
+                        label: 'Eliminar ejercicio',
+                        icon: AppIcons.trash,
+                        iconColor: AppColors.alert,
+                        onTap: () => setState(() => _confirmDelete = true),
+                      )
+                    else
+                      _DeleteConfirm(
+                        exercise: editing,
+                        onCancel: () => setState(() => _confirmDelete = false),
+                        onDelete: _delete,
+                      ),
                   ],
                 ],
               ),
             ),
             BottomActionBar(
-              label: widget.saveLabel,
+              label: editing == null ? widget.saveLabel : 'Guardar cambios',
               onTap: _save,
               error: _error,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Confirmación de borrado, con lo que se pierde junto al ejercicio.
+class _DeleteConfirm extends StatelessWidget {
+  const _DeleteConfirm({
+    required this.exercise,
+    required this.onCancel,
+    required this.onDelete,
+  });
+  final Exercise exercise;
+  final VoidCallback onCancel;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final sets = app.setCount(exercise.id);
+    final routines = app.routinesWith(exercise.id).length;
+    final lost = [
+      sets == 0
+          ? 'No tiene series registradas.'
+          : 'Se borrarán también sus $sets ${plural(sets, 'serie registrada', 'series registradas')}.',
+      if (routines > 0)
+        'Se quitará de $routines ${plural(routines, 'rutina', 'rutinas')}.',
+      'No se puede deshacer.',
+    ].join(' ');
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.alertSoft(0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF5A3A32)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Eliminar «${exercise.name}»?',
+              style: AppText.body(15, weight: FontWeight.w600),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              lost,
+              style: AppText.body(
+                13,
+                color: AppColors.textSecondary,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: SecondaryButton(
+                    label: 'Cancelar',
+                    height: 44,
+                    fontSize: 15,
+                    radius: 12,
+                    onTap: onCancel,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Pressable(
+                    onTap: onDelete,
+                    color: AppColors.alert,
+                    radius: 12,
+                    height: 44,
+                    child: Center(
+                      child: Text(
+                        'Eliminar',
+                        style: AppText.body(
+                          15,
+                          weight: FontWeight.w700,
+                          color: AppColors.background,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -186,7 +323,7 @@ class _KindOption extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

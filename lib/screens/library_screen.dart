@@ -97,6 +97,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
+  Future<void> _edit(Exercise ex) async {
+    final app = AppScope.read(context);
+    final updated = await pushScreen<Exercise>(
+      context,
+      NewExerciseScreen(exercise: ex),
+    );
+    if (updated == null || !mounted) return;
+    // Si se filtraba por el grupo anterior, sigue a la vista en el nuevo.
+    if (_group != 'todos') setState(() => _group = updated.group);
+    app.flash(
+      '«${updated.name}» actualizado.',
+      ToastTarget.library,
+      highlightId: updated.id,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final body = widget.draft == null
@@ -332,6 +348,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     dayWord: dayWord,
                     highlighted: app.highlightId == ex.id,
                     onTap: () => _log(ex),
+                    onEdit: ex.custom ? () => _edit(ex) : null,
                   ),
                 const SizedBox(height: 8),
               ],
@@ -425,6 +442,7 @@ class _LogRow extends StatelessWidget {
     required this.dayWord,
     required this.highlighted,
     required this.onTap,
+    this.onEdit,
   });
 
   final Exercise exercise;
@@ -433,6 +451,9 @@ class _LogRow extends StatelessWidget {
   final String dayWord;
   final bool highlighted;
   final VoidCallback onTap;
+
+  /// Solo en los ejercicios propios: abre la edición.
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -450,7 +471,9 @@ class _LogRow extends StatelessWidget {
     }
     if (ex.custom) info = 'Creado por ti · $info';
     final chip = inSession
-        ? (setsToday > 0 ? '$setsToday series $dayWord' : 'En tu sesión')
+        ? (setsToday > 0
+              ? '$setsToday ${plural(setsToday, 'serie', 'series')} $dayWord'
+              : 'En tu sesión')
         : groupLabel(ex.group);
 
     return Pressable(
@@ -505,11 +528,22 @@ class _LogRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            const AppIcon(
-              AppIcons.chevronRight,
-              size: 18,
-              color: AppColors.textFaint,
-            ),
+            if (onEdit != null)
+              CircleIconButton(
+                icon: AppIcons.edit,
+                size: 40,
+                iconSize: 18,
+                radius: 12,
+                color: AppColors.control,
+                semanticLabel: 'Editar ${ex.name}',
+                onTap: onEdit!,
+              )
+            else
+              const AppIcon(
+                AppIcons.chevronRight,
+                size: 18,
+                color: AppColors.textFaint,
+              ),
           ],
         ),
       ),

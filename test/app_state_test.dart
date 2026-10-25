@@ -207,4 +207,61 @@ void main() {
     expect(reloaded.setsOn(today, ex.id).single.time, fixedNow);
     expect(reloaded.routine(rid)!.items.single.sets, 4);
   });
+
+  test('editar un ejercicio propio cambia nombre y grupo, no el tipo', () {
+    final app = newState();
+    final ex = app.createExercise(
+      name: 'Bicicleta',
+      group: 'piernas',
+      kind: ExerciseKind.seconds,
+    );
+    app.addSet(today, ex.id, const SetEntry(reps: 1200));
+    final edited = app.updateExercise(
+      ex.id,
+      name: 'Bicicleta estática',
+      group: 'cardio',
+    );
+    expect(edited!.kind, ExerciseKind.seconds);
+    expect(app.exercise(ex.id)!.name, 'Bicicleta estática');
+    expect(app.exercise(ex.id)!.group, 'cardio');
+    expect(app.setsOn(today, ex.id).single.reps, 1200);
+    expect(
+      app.exerciseNameExists('bicicleta estatica', except: ex.id),
+      isFalse,
+    );
+    expect(app.exerciseNameExists('bicicleta estatica'), isTrue);
+    expect(app.updateExercise('press-banca', name: 'X', group: 'core'), isNull);
+  });
+
+  test('borrar un ejercicio propio quita series, rutinas y planes', () {
+    final app = newState();
+    final ex = app.createExercise(
+      name: 'Hip thrust',
+      group: 'piernas',
+      kind: ExerciseKind.weight,
+    );
+    final rid = app.saveRoutine(
+      name: 'Glúteos',
+      items: [
+        RoutineItem(exerciseId: ex.id),
+        const RoutineItem(exerciseId: 'sentadilla'),
+      ],
+    );
+    app.addExerciseToDay(monday, ex.id);
+    app.addSet(monday, ex.id, const SetEntry(reps: 10, kg: 80));
+    app.addSet(today, ex.id, const SetEntry(reps: 10, kg: 85));
+    app.addSet(today, 'sentadilla', const SetEntry(reps: 8, kg: 100));
+    expect(app.setCount(ex.id), 2);
+    expect(app.routinesWith(ex.id).single.id, rid);
+
+    app.deleteExercise(ex.id);
+    expect(app.exercise(ex.id), isNull);
+    expect(app.setCount(ex.id), 0);
+    expect(app.routine(rid)!.items.map((it) => it.exerciseId), ['sentadilla']);
+    expect(app.plan(monday).exerciseIds, isEmpty);
+    expect(app.setsOn(today, 'sentadilla'), hasLength(1));
+
+    app.deleteExercise('press-banca');
+    expect(app.exercise('press-banca'), isNotNull);
+  });
 }

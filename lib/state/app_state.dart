@@ -283,9 +283,10 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
-  bool exerciseNameExists(String name) {
+  /// ¿Hay otro ejercicio (distinto de [except]) con ese nombre?
+  bool exerciseNameExists(String name, {String? except}) {
     final n = normalize(name);
-    return exercises.any((e) => normalize(e.name) == n);
+    return exercises.any((e) => e.id != except && normalize(e.name) == n);
   }
 
   Exercise createExercise({
@@ -303,6 +304,75 @@ class AppState extends ChangeNotifier {
     _write(Change(SyncTable.exercises, ex.id, exerciseRow(ex)));
     _commit();
     return ex;
+  }
+
+  /// Cambia nombre y grupo de un ejercicio propio. El tipo no cambia nunca:
+  /// las series ya registradas se leen según él.
+  Exercise? updateExercise(
+    String id, {
+    required String name,
+    required String group,
+  }) {
+    final old = exercise(id);
+    if (old == null || !old.custom) return null;
+    final ex = Exercise(
+      id: id,
+      name: name.trim(),
+      group: group,
+      kind: old.kind,
+      custom: true,
+    );
+    _write(Change(SyncTable.exercises, id, exerciseRow(ex)));
+    _commit();
+    return ex;
+  }
+
+  /// Series registradas del ejercicio, contando todos los días.
+  int setCount(String exId) =>
+      _logs.values.fold(0, (n, byEx) => n + (byEx[exId]?.length ?? 0));
+
+  /// Rutinas que incluyen el ejercicio.
+  List<Routine> routinesWith(String exId) => [
+    for (final r in _routines)
+      if (r.items.any((it) => it.exerciseId == exId)) r,
+  ];
+
+  /// Borra un ejercicio propio con todas sus series y lo quita de rutinas y
+  /// de los días en que estaba cargado.
+  void deleteExercise(String id) {
+    final ex = exercise(id);
+    if (ex == null || !ex.custom) return;
+    final setIds = [
+      for (final byEx in _logs.values) ...?byEx[id]?.map((s) => s.id!),
+    ];
+    for (final setId in setIds) {
+      _write(Change(SyncTable.sets, setId, null));
+    }
+    for (final r in routinesWith(id)) {
+      final items = [
+        for (final it in r.items)
+          if (it.exerciseId != id) it,
+      ];
+      _write(
+        Change(
+          SyncTable.routines,
+          r.id,
+          routineRow(Routine(id: r.id, name: r.name, items: items)),
+        ),
+      );
+    }
+    final days = [
+      for (final MapEntry(:key, :value) in _plans.entries)
+        if (value.exerciseIds.contains(id)) parseDayKey(key),
+    ];
+    for (final d in days) {
+      _updatePlan(d, (p) {
+        p.exerciseIds.remove(id);
+        if (p.exerciseIds.isEmpty) p.routineIds.clear();
+      });
+    }
+    _write(Change(SyncTable.exercises, id, null));
+    _commit();
   }
 
   List<Routine> get routines => List.unmodifiable(_routines);

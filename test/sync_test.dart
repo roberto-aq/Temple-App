@@ -142,6 +142,40 @@ void main() {
     expect(app.setsOn(today, 'curl').single.kg, 17.5);
   });
 
+  test('editar y borrar un ejercicio propio llega al servidor', () async {
+    final ex = app.createExercise(
+      name: 'Bicicleta',
+      group: 'piernas',
+      kind: ExerciseKind.seconds,
+    );
+    final rid = app.saveRoutine(
+      name: 'Cardio',
+      items: [
+        RoutineItem(exerciseId: ex.id),
+        const RoutineItem(exerciseId: 'plancha'),
+      ],
+    );
+    app.addSet(today, ex.id, const SetEntry(reps: 1200));
+    await sync.flush();
+
+    app.updateExercise(ex.id, name: 'Bicicleta estática', group: 'cardio');
+    await sync.flush();
+    expect(
+      server.tables[SyncTable.exercises]![ex.id]!['muscle_group'],
+      'cardio',
+    );
+    expect(server.tables[SyncTable.exercises]![ex.id]!['kind'], 'seconds');
+
+    app.deleteExercise(ex.id);
+    await sync.flush();
+    expect(server.tables[SyncTable.exercises], isEmpty);
+    expect(server.tables[SyncTable.sets], isEmpty);
+    expect(server.tables[SyncTable.routines]![rid]!['items'], [
+      {'ex': 'plancha', 'sets': 3, 'reps': 10},
+    ]);
+    expect(server.tables[SyncTable.dayPlans], isEmpty);
+  });
+
   test('sin conexión todo sigue funcionando y se sube al volver', () async {
     server.online = false;
     app.addSet(today, 'press-banca', const SetEntry(reps: 8, kg: 60));
