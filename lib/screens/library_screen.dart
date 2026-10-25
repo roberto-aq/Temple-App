@@ -139,6 +139,41 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }).toList();
     final toast = app.toastFor(ToastTarget.library);
     final draft = widget.draft;
+    // Separa los propios de la biblioteca solo si la cuenta ya creó alguno.
+    final sections = app.exercises.any((e) => e.custom);
+    final groups = [
+      (
+        'Tus ejercicios',
+        [
+          for (final ex in list)
+            if (ex.custom) ex,
+        ],
+      ),
+      (
+        'Biblioteca',
+        [
+          for (final ex in list)
+            if (!ex.custom) ex,
+        ],
+      ),
+    ];
+
+    Widget row(Exercise ex) => draft != null
+        ? _PickRow(
+            exercise: ex,
+            picked: draft.contains(ex.id),
+            highlighted: app.highlightId == ex.id,
+            onTap: () => draft.toggle(ex),
+          )
+        : _LogRow(
+            exercise: ex,
+            inSession: session.contains(ex.id),
+            setsToday: app.setsOn(day, ex.id).length,
+            dayWord: dayWord,
+            highlighted: app.highlightId == ex.id,
+            onTap: () => _log(ex),
+            onEdit: ex.custom ? () => _edit(ex) : null,
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,26 +367,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ],
                   ),
                 ),
-              for (final ex in list) ...[
-                if (draft != null)
-                  _PickRow(
-                    exercise: ex,
-                    picked: draft.contains(ex.id),
-                    highlighted: app.highlightId == ex.id,
-                    onTap: () => draft.toggle(ex),
-                  )
-                else
-                  _LogRow(
-                    exercise: ex,
-                    inSession: session.contains(ex.id),
-                    setsToday: app.setsOn(day, ex.id).length,
-                    dayWord: dayWord,
-                    highlighted: app.highlightId == ex.id,
-                    onTap: () => _log(ex),
-                    onEdit: ex.custom ? () => _edit(ex) : null,
-                  ),
-                const SizedBox(height: 8),
-              ],
+              for (final (i, (title, items)) in groups.indexed)
+                if (items.isNotEmpty) ...[
+                  if (sections)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: i > 0 && groups.first.$2.isNotEmpty ? 14 : 2,
+                        bottom: 8,
+                      ),
+                      child: SectionLabel('$title · ${items.length}'),
+                    ),
+                  for (final ex in items) ...[
+                    row(ex),
+                    const SizedBox(height: 8),
+                  ],
+                ],
             ],
           ),
         ),

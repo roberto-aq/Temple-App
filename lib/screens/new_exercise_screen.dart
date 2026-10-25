@@ -176,23 +176,21 @@ class _NewExerciseScreenState extends State<NewExerciseScreen> {
                   const SectionLabel('Qué vas a registrar'),
                   const SizedBox(height: 8),
                   for (final (kind, title, sub) in _kinds)
-                    // Al editar solo se muestra el tipo elegido, sin poder cambiarlo.
-                    if (editing == null || kind == _kind) ...[
+                    // Al editar solo se muestra el tipo elegido, bloqueado.
+                    if (editing == null) ...[
                       _KindOption(
                         title: title,
-                        subtitle: editing == null
-                            ? sub
-                            : 'No se puede cambiar: tus series se registraron así.',
+                        subtitle: sub,
                         selected: _kind == kind,
-                        onTap: editing != null
-                            ? null
-                            : () => setState(() {
-                                _kind = kind;
-                                _error = null;
-                              }),
+                        onTap: () => setState(() {
+                          _kind = kind;
+                          _error = null;
+                        }),
                       ),
                       const SizedBox(height: 8),
-                    ],
+                    ] else if (kind == _kind)
+                      // Sin el paréntesis, para que quepa junto a «BLOQUEADO».
+                      _LockedKind(title: title.split(' (').first),
                   if (editing != null) ...[
                     const SizedBox(height: 22),
                     if (!_confirmDelete)
@@ -323,7 +321,7 @@ class _KindOption extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool selected;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -372,6 +370,69 @@ class _KindOption extends StatelessWidget {
                     style: AppText.body(13, color: AppColors.textSecondary),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tipo de registro de un ejercicio ya creado: visible pero bloqueado, sin
+/// interacción (las series ya registradas se leen según él).
+class _LockedKind extends StatelessWidget {
+  const _LockedKind({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '$title. Bloqueado: no se puede cambiar.',
+      excludeSemantics: true,
+      child: EmptyBox(
+        radius: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            const AppIcon(
+              AppIcons.lock,
+              size: 22,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppText.body(
+                      16,
+                      weight: FontWeight.w600,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'No se puede cambiar: tus series se registraron así.',
+                    style: AppText.body(13, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              height: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceRaised,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                'BLOQUEADO',
+                style: AppText.label(size: 10, color: AppColors.textSecondary),
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:temple/app.dart';
 import 'package:temple/data/storage.dart';
 import 'package:temple/models/models.dart';
 import 'package:temple/state/app_state.dart';
+import 'package:temple/widgets/ui.dart';
 
 import 'fixtures.dart';
 
@@ -255,5 +256,41 @@ void main() {
     await tester.tap(find.bySemanticsLabel('16 de octubre, entrenaste'));
     await tester.pumpAndSettle();
     expect(find.text('Repetir esta sesión hoy'), findsOneWidget);
+  });
+
+  testWidgets('la biblioteca separa los ejercicios propios solo si hay', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tapText(tester, 'Ejercicios');
+    expect(find.textContaining('TUS EJERCICIOS'), findsNothing);
+    expect(find.textContaining('BIBLIOTECA'), findsNothing);
+  });
+
+  testWidgets('editar: secciones y tipo de registro bloqueado', (tester) async {
+    await pumpApp(
+      tester,
+      seed: (app) => app.createExercise(
+        name: 'Bicicleta',
+        group: 'piernas',
+        kind: ExerciseKind.seconds,
+      ),
+    );
+    await tapText(tester, 'Ejercicios');
+    expect(find.text('TUS EJERCICIOS · 1'), findsOneWidget);
+    expect(find.text('BIBLIOTECA · 32'), findsOneWidget);
+
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is CircleIconButton && w.semanticLabel == 'Editar Bicicleta',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('BLOQUEADO'), findsOneWidget);
+    expect(find.text('Solo repeticiones'), findsNothing);
+    // El tipo bloqueado no es un botón: tocarlo no hace nada.
+    await tester.tap(find.text('Tiempo'));
+    await tester.pumpAndSettle();
+    expect(find.text('BLOQUEADO'), findsOneWidget);
   });
 }
