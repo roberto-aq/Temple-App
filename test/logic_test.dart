@@ -78,6 +78,10 @@ void main() {
       expect(setsTotal(plank, repSets([45, 40])), '1 min 25 seg');
       expect(durationText(45), '45 seg');
       expect(durationText(120), '2 min');
+      expect(setsTotalParts(pullups, repSets([10, 8, 6])), ('24', 'reps'));
+      expect(setsTotalParts(plank, repSets([45])), ('45', 'seg'));
+      expect(setsTotalParts(plank, repSets([1200, 390])), ('26:30', 'min'));
+      expect(setsTotalParts(plank, repSets([1200, 360])), ('26', 'min'));
     });
 
     test('series por tiempo en segundos o minutos', () {
@@ -86,6 +90,11 @@ void main() {
       expect(setLabel(plank, const SetEntry(reps: 300)), '5 min');
       expect(amountParts(plank, 90), [('1', 'min'), ('30', 'seg')]);
       expect(amountParts(plank, 45), [('45', 'seg')]);
+      expect(amountParts(plank, 90, long: true), [
+        ('1', 'minuto'),
+        ('30', 'segundos'),
+      ]);
+      expect(amountParts(plank, 240, long: true), [('4', 'minutos')]);
       expect(amountParts(pullups, 12), [('12', 'reps')]);
       expect(plank.maxReps, 10800);
       expect(pullups.maxReps, 300);

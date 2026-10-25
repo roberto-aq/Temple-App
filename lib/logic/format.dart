@@ -137,16 +137,31 @@ String amountText(Exercise ex, int reps) =>
 
 /// Las partes de una serie para mostrarlas en grande con su unidad:
 /// [(«12», «reps»)] o, por tiempo, [(«1», «min»), («30», «seg»)].
-List<(String, String)> amountParts(Exercise ex, int reps) {
+/// Con [long], las unidades de tiempo completas: «minuto», «segundos».
+List<(String, String)> amountParts(Exercise ex, int reps, {bool long = false}) {
   if (!ex.timed) return [('$reps', 'reps')];
   final m = reps ~/ 60, s = reps % 60;
-  return [if (m > 0) ('$m', 'min'), if (s > 0 || m == 0) ('$s', 'seg')];
+  return [
+    if (m > 0) ('$m', long ? plural(m, 'minuto', 'minutos') : 'min'),
+    if (s > 0 || m == 0)
+      ('$s', long ? plural(s, 'segundo', 'segundos') : 'seg'),
+  ];
 }
 
 /// Total de las series: «45 reps» o, por tiempo, «2 min 15 seg».
 String setsTotal(Exercise ex, List<SetEntry> sets) {
   final total = sets.fold(0, (sum, s) => sum + s.reps);
   return ex.timed ? durationText(total) : '$total reps';
+}
+
+/// El total en cifra y unidad, para mostrarlo en grande: («45», «reps»),
+/// («26», «min») o («26:30», «min»).
+(String, String) setsTotalParts(Exercise ex, List<SetEntry> sets) {
+  final total = sets.fold(0, (sum, s) => sum + s.reps);
+  if (!ex.timed) return ('$total', 'reps');
+  if (total < 60) return ('$total', 'seg');
+  final m = total ~/ 60, s = total % 60;
+  return s == 0 ? ('$m', 'min') : ('$m:${s.toString().padLeft(2, '0')}', 'min');
 }
 
 /// «45 seg», «2 min» o «2 min 15 seg».

@@ -510,10 +510,11 @@ class _SessionItem extends StatelessWidget {
                             const SizedBox(height: 6),
                             Text(
                               total,
-                              style: AppText.body(
-                                13,
-                                weight: FontWeight.w600,
+                              style: AppText.display(
+                                20,
+                                weight: FontWeight.w700,
                                 color: AppColors.accent,
+                                height: 1.1,
                               ),
                             ),
                           ],

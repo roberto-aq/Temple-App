@@ -200,6 +200,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     final editing = _editIdx != null && _editIdx! < logged.length;
     final nextId = logged.isNotEmpty ? _nextExercise(app) : null;
     final repStep = _minutes ? 60 : ex.step;
+    final totalParts = setsTotalParts(ex, logged);
     final dayWord = app.dayWord(day);
 
     return Scaffold(
@@ -237,42 +238,34 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        '${logged.length}',
-                        style: AppText.display(
-                          52,
-                          height: 1,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${plural(logged.length, 'serie', 'series')} $dayWord',
-                              style: AppText.body(
-                                16,
-                                weight: FontWeight.w600,
-                                color: AppColors.textSecondary,
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.bottomLeft,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              _HeadStat(
+                                value: '${logged.length}',
+                                top: plural(logged.length, 'serie', 'series'),
+                                bottom: dayWord,
+                                color: AppColors.accent,
                               ),
-                            ),
-                            if (logged.isNotEmpty)
-                              Text(
-                                '${setsTotal(ex, logged)} en total',
-                                style: AppText.body(
-                                  14,
-                                  color: AppColors.textSecondary,
+                              if (logged.isNotEmpty) ...[
+                                const SizedBox(width: 24),
+                                _HeadStat(
+                                  value: totalParts.$1,
+                                  top: totalParts.$2,
+                                  bottom: 'en total',
                                 ),
-                              ),
-                          ],
+                              ],
+                            ],
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 12),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 180),
+                        constraints: const BoxConstraints(maxWidth: 100),
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: SetPills(
@@ -647,7 +640,7 @@ class _Counter extends StatelessWidget {
       child: Column(
         children: [
           header ?? Text(label.toUpperCase(), style: AppText.label()),
-          const SizedBox(height: 6),
+          SizedBox(height: header == null ? 6 : 10),
           ListenableBuilder(
             listenable: focusNode,
             builder: (context, _) => Container(
@@ -690,6 +683,11 @@ class _Counter extends StatelessWidget {
               ),
             ),
           ),
+          // Con selector arriba, la unidad completa va bajo el número.
+          if (header != null) ...[
+            const SizedBox(height: 8),
+            Text(label.toUpperCase(), style: AppText.label()),
+          ],
           const SizedBox(height: 6),
           Row(
             children: [
@@ -716,7 +714,50 @@ class _Counter extends StatelessWidget {
   }
 }
 
-/// Selector «SEGUNDOS | MINUTOS» de los ejercicios por tiempo.
+/// Cifra grande de la cabecera con su texto en dos líneas: «4 series hoy».
+class _HeadStat extends StatelessWidget {
+  const _HeadStat({
+    required this.value,
+    required this.top,
+    required this.bottom,
+    this.color = AppColors.text,
+  });
+  final String value;
+  final String top;
+  final String bottom;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppText.body(
+      16,
+      weight: FontWeight.w600,
+      color: AppColors.textSecondary,
+      height: 1.15,
+    );
+    return MergeSemantics(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(value, style: AppText.display(52, height: 1, color: color)),
+          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(top, style: style),
+                Text(bottom, style: style),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Selector «SEG | MIN» de los ejercicios por tiempo.
 class _UnitToggle extends StatelessWidget {
   const _UnitToggle({required this.minutes, required this.onChanged});
   final bool minutes;
@@ -724,21 +765,25 @@ class _UnitToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget option(String text, bool value) {
+    Widget option(String text, String unit, bool value) {
       final on = minutes == value;
-      return Pressable(
-        onTap: () => onChanged(value),
-        color: on ? AppColors.accent : Colors.transparent,
-        radius: 99,
-        height: 28,
-        selected: on,
-        semanticLabel: 'Registrar en ${text.toLowerCase()}',
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Center(
-          child: Text(
-            text,
-            style: AppText.label(
-              color: on ? AppColors.background : AppColors.textSecondary,
+      return Expanded(
+        child: Pressable(
+          onTap: () => onChanged(value),
+          color: on ? AppColors.accent : Colors.transparent,
+          radius: 12,
+          height: 44,
+          selected: on,
+          semanticLabel: 'Registrar en $unit',
+          child: Center(
+            child: Text(
+              text,
+              style: AppText.display(
+                20,
+                weight: FontWeight.w800,
+                height: 1,
+                color: on ? AppColors.background : AppColors.textSecondary,
+              ),
             ),
           ),
         ),
@@ -746,15 +791,18 @@ class _UnitToggle extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.control,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppColors.borderStrong),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderStrong, width: 1.5),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [option('SEGUNDOS', false), option('MINUTOS', true)],
+        children: [
+          option('SEG', 'segundos', false),
+          const SizedBox(width: 4),
+          option('MIN', 'minutos', true),
+        ],
       ),
     );
   }
@@ -969,6 +1017,7 @@ class _LoggedSetRow extends StatelessWidget {
                           for (final (i, (value, unit)) in amountParts(
                             ex,
                             entry.reps,
+                            long: true,
                           ).indexed) ...[
                             if (i > 0) const SizedBox(width: 10),
                             Text(value, style: big),
