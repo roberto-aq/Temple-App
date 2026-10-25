@@ -66,6 +66,25 @@ flutter run -d chrome --dart-define-from-file=.env  # en el navegador
 flutter test
 ```
 
+## Generar el APK
+
+```bash
+flutter build apk --release --dart-define-from-file=.env
+```
+
+Queda en `build/app/outputs/flutter-apk/app-release.apk`. Se instala encima de la versión anterior (sin desinstalar) con `flutter install` o abriendo el APK en el teléfono.
+
+Antes de cada APK que repartas, sube la versión en `pubspec.yaml`: `1.0.0+1` → `1.0.1+2`. El número tras el `+` es el que Android compara para saber que es más nueva y debe aumentar siempre.
+
+### Firma
+
+El release se firma con una clave propia, no con la de depuración:
+
+- La clave: `C:\Users\User\.android-keys\temple-upload.jks` (fuera del proyecto).
+- Su contraseña y ubicación: `android/key.properties` (fuera de git).
+
+**Respalda los dos archivos** (por ejemplo en un USB o en tu nube personal, nunca en el repositorio). Sin ellos, los teléfonos que ya tienen la app no aceptan actualizaciones: habría que desinstalar e instalar de nuevo (los datos vuelven desde Supabase al entrar). Si `key.properties` no existe, el build avisa y firma con la clave de depuración.
+
 ## Ícono de la app
 
 El yunque del tablero «Marca» del diseño. Las imágenes fuente (`assets/icon/`) se dibujan con código y luego se generan los íconos de cada plataforma:
