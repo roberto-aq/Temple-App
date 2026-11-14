@@ -23,6 +23,10 @@ class SupabaseBackend implements RemoteBackend {
     SyncTable.routines: 'id, name, items',
     SyncTable.dayPlans: 'day, routine_ids, exercise_ids',
     SyncTable.sets: 'id, day, exercise_id, reps, kg, unit, logged_at',
+    SyncTable.intervalProtocols:
+        'id, name, work_seconds, rest_seconds, rounds, sided, switch_seconds, weighted',
+    SyncTable.intervalSessions:
+        'id, protocol_id, day, started_at, name, work_seconds, rest_seconds, rounds, sided, kg, unit, done, notes',
   };
 
   @override
@@ -46,6 +50,14 @@ class SupabaseBackend implements RemoteBackend {
           query
               .order('day', ascending: true)
               .order('logged_at', ascending: true)
+              .order('id', ascending: true),
+        SyncTable.intervalProtocols =>
+          query
+              .order('created_at', ascending: true)
+              .order('id', ascending: true),
+        SyncTable.intervalSessions =>
+          query
+              .order('started_at', ascending: true)
               .order('id', ascending: true),
       };
       final page = await ordered.range(out.length, out.length + _pageSize - 1);

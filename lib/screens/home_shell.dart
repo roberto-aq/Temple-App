@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/app_icon.dart';
+import 'intervals_screen.dart';
 import 'library_screen.dart';
 import 'progress_screen.dart';
 import 'routines_screen.dart';
@@ -11,7 +12,8 @@ enum AppTab {
   hoy('Hoy', AppIcons.calendar),
   rutinas('Rutinas', AppIcons.list),
   progreso('Progreso', AppIcons.chart),
-  ejercicios('Ejercicios', AppIcons.dumbbell);
+  ejercicios('Ejercicios', AppIcons.dumbbell),
+  intervalos('Intervalos', AppIcons.timer);
 
   const AppTab(this.label, this.icon);
   final String label;
@@ -67,6 +69,7 @@ class HomeShell extends StatelessWidget {
             RoutinesScreen(),
             ProgressScreen(),
             LibraryScreen(),
+            IntervalsScreen(),
           ],
         ),
       ),

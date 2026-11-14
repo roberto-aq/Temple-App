@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:temple/data/storage.dart';
+import 'package:temple/models/intervals.dart';
 import 'package:temple/models/models.dart';
 import 'package:temple/state/app_state.dart';
 import 'package:temple/sync/outbox.dart';
@@ -282,6 +283,65 @@ void main() {
       outbox.add(const Change(SyncTable.sets, 'a', {'reps': 9}));
       outbox.remove(sending);
       expect(outbox.changes.single.row, {'reps': 9});
+    },
+  );
+
+  test(
+    'intervalos: plantillas y sesiones llegan al servidor y a otro teléfono',
+    () async {
+      final p = app.saveIntervalProtocol(
+        name: 'Isométrico de talón',
+        workSeconds: 45,
+        restSeconds: 60,
+        rounds: 5,
+        sided: true,
+        switchSeconds: 10,
+        weighted: false,
+      );
+      final id = app.addIntervalSession(
+        protocol: p,
+        startedAt: fixedNow,
+        done: const [
+          IntervalRound(1, IntervalSide.left, 45),
+          IntervalRound(1, IntervalSide.right, 40),
+        ],
+        notes: 'Molestia leve al final',
+      );
+      await sync.flush();
+      expect(sync.pending, 0);
+      expect(server.tables[SyncTable.intervalProtocols]![p.id], {
+        'id': p.id,
+        'name': 'Isométrico de talón',
+        'work_seconds': 45,
+        'rest_seconds': 60,
+        'rounds': 5,
+        'sided': true,
+        'switch_seconds': 10,
+        'weighted': false,
+      });
+      final row = server.tables[SyncTable.intervalSessions]![id]!;
+      expect(row['protocol_id'], p.id);
+      expect(row['day'], '2026-10-23');
+      expect(row['kg'], isNull);
+      expect(row['done'], [
+        {'r': 1, 'side': 'left', 's': 45},
+        {'r': 1, 'side': 'right', 's': 40},
+      ]);
+
+      // Otro teléfono de la misma cuenta descarga todo.
+      final sync2 = SyncService(backend: server, storage: MemoryStorage());
+      addTearDown(sync2.dispose);
+      final phone2 = AppState(storage: MemoryStorage(), sync: sync2);
+      await sync2.refresh();
+      expect(phone2.intervalProtocol(p.id)!.sided, isTrue);
+      expect(phone2.intervalSession(id)!.notes, 'Molestia leve al final');
+      expect(phone2.intervalSession(id)!.roundsDone, 1);
+
+      // Borrar la plantilla en uno conserva la sesión en el servidor.
+      app.deleteIntervalProtocol(p.id);
+      await sync.flush();
+      expect(server.tables[SyncTable.intervalProtocols], isEmpty);
+      expect(server.tables[SyncTable.intervalSessions]!.keys, [id]);
     },
   );
 }

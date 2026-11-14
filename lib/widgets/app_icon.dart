@@ -58,7 +58,14 @@ enum AppIcons {
   ),
   logOut(
     '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 16l4-4-4-4M19 12H9"/>',
-  );
+  ),
+  // Intervalos (no están en el diseño; mismo estilo de trazo).
+  timer(
+    '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M10 2.5h4M18.5 7l1.5-1.5"/>',
+  ),
+  pause('<path d="M8.5 5v14M15.5 5v14"/>'),
+  skip('<path d="M6 5.5l9 6.5-9 6.5zM18.5 5.5v13"/>'),
+  stop('<rect x="6" y="6" width="12" height="12" rx="2"/>');
 
   const AppIcons(this.markup);
   final String markup;

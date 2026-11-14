@@ -7,7 +7,9 @@ enum SyncTable {
   exercises('exercises', 'id'),
   routines('routines', 'id'),
   dayPlans('day_plans', 'day'),
-  sets('sets', 'id');
+  sets('sets', 'id'),
+  intervalProtocols('interval_protocols', 'id'),
+  intervalSessions('interval_sessions', 'id');
 
   const SyncTable(this.table, this.keyColumn);
 

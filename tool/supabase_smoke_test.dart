@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:temple/config.dart';
 import 'package:temple/data/storage.dart';
+import 'package:temple/models/intervals.dart';
 import 'package:temple/models/models.dart';
 import 'package:temple/state/app_state.dart';
 import 'package:temple/sync/outbox.dart';
@@ -101,6 +102,24 @@ void main() {
     phone1.addSet(today, 'plancha', const SetEntry(reps: 45));
     phone1.replaceSet(today, ex.id, 1, const SetEntry(reps: 10, kg: 82.5));
     phone1.removeSet(today, 'plancha', 0);
+    final iso = phone1.saveIntervalProtocol(
+      name: 'Isométrico de talón',
+      workSeconds: 45,
+      restSeconds: 60,
+      rounds: 5,
+      sided: true,
+      switchSeconds: 10,
+      weighted: false,
+    );
+    phone1.addIntervalSession(
+      protocol: iso,
+      startedAt: DateTime(2026, 10, 23, 18),
+      done: const [
+        IntervalRound(1, IntervalSide.left, 45),
+        IntervalRound(1, IntervalSide.right, 40),
+      ],
+      notes: 'Prueba',
+    );
     await sync1.flush();
     expect(sync1.status, SyncStatus.synced, reason: sync1.lastError);
     expect(sync1.pending, 0);
@@ -121,7 +140,13 @@ void main() {
       (10, 82.5),
     ]);
     expect(phone2.setsOn(today, 'plancha'), isEmpty);
-    print('✓ Otro dispositivo de la misma cuenta ve exactamente lo mismo');
+    expect(phone2.intervalProtocol(iso.id)!.sided, isTrue);
+    final isoSession = phone2.intervalSessions.single;
+    expect(isoSession.done.map((r) => r.seconds), [45, 40]);
+    expect(isoSession.notes, 'Prueba');
+    print(
+      '✓ Otro dispositivo de la misma cuenta ve exactamente lo mismo (también intervalos)',
+    );
 
     // --- La base de datos rechaza datos inválidos -------------------------------
     await expectLater(

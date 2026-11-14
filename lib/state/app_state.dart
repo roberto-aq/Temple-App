@@ -9,12 +9,13 @@ import '../data/catalog.dart';
 import '../data/storage.dart';
 import '../logic/format.dart';
 import '../logic/progress.dart';
+import '../models/intervals.dart';
 import '../models/models.dart';
 import '../sync/outbox.dart';
 import '../sync/rows.dart';
 import '../sync/sync_service.dart';
 
-enum ToastTarget { routines, library }
+enum ToastTarget { routines, library, intervals }
 
 const _uuid = Uuid();
 
@@ -44,6 +45,8 @@ class AppState extends ChangeNotifier {
   Map<String, DayPlan> _plans = {};
   Map<String, Map<String, List<SetEntry>>> _logs = {};
   DateTime? _selectedDay;
+  List<IntervalProtocol> _protocols = [];
+  List<IntervalSession> _intervalSessions = [];
 
   // ---------------------------------------------------------------------------
   // Copia local, cambios y sincronización
@@ -81,6 +84,14 @@ class AppState extends ChangeNotifier {
             ],
         },
     };
+    _protocols = [
+      for (final r in j['intervalProtocols'] as List? ?? const [])
+        intervalProtocolFromRow(r as Map<String, dynamic>),
+    ];
+    _intervalSessions = [
+      for (final r in j['intervalSessions'] as List? ?? const [])
+        intervalSessionFromRow(r as Map<String, dynamic>),
+    ];
     notifyListeners();
   }
 
@@ -95,6 +106,8 @@ class AppState extends ChangeNotifier {
         v.map((ex, sets) => MapEntry(ex, sets.map((s) => s.toJson()).toList())),
       ),
     ),
+    'intervalProtocols': _protocols.map(intervalProtocolRow).toList(),
+    'intervalSessions': _intervalSessions.map(intervalSessionRow).toList(),
   };
 
   void _commit() {
@@ -130,6 +143,17 @@ class AppState extends ChangeNotifier {
       final s = setFromRow(r);
       _insertSet(s.day, s.exerciseId, s.entry);
     }
+    _protocols = [
+      for (final r
+          in rows[SyncTable.intervalProtocols] ??
+              const <Map<String, dynamic>>[])
+        intervalProtocolFromRow(r),
+    ];
+    _intervalSessions = [
+      for (final r
+          in rows[SyncTable.intervalSessions] ?? const <Map<String, dynamic>>[])
+        intervalSessionFromRow(r),
+    ];
     for (final c in pending) {
       _apply(c);
     }
@@ -175,6 +199,24 @@ class AppState extends ChangeNotifier {
         } else {
           _removeSet(c.key);
           _insertSet(s.day, s.exerciseId, s.entry);
+        }
+      case SyncTable.intervalProtocols:
+        final i = _protocols.indexWhere((p) => p.id == c.key);
+        if (row == null) {
+          if (i >= 0) _protocols = [..._protocols]..removeAt(i);
+        } else {
+          final p = intervalProtocolFromRow(row);
+          _protocols = i >= 0 ? ([..._protocols]..[i] = p) : [..._protocols, p];
+        }
+      case SyncTable.intervalSessions:
+        final i = _intervalSessions.indexWhere((s) => s.id == c.key);
+        if (row == null) {
+          if (i >= 0) _intervalSessions = [..._intervalSessions]..removeAt(i);
+        } else {
+          final s = intervalSessionFromRow(row);
+          _intervalSessions = i >= 0
+              ? ([..._intervalSessions]..[i] = s)
+              : [..._intervalSessions, s];
         }
     }
   }
@@ -636,6 +678,135 @@ class AppState extends ChangeNotifier {
 
   ExerciseAnalysis analyze(Exercise ex) =>
       ExerciseAnalysis(ex, history(ex.id), today);
+
+  // ---------------------------------------------------------------------------
+  // Intervalos (aparte de los ejercicios y las series)
+  // ---------------------------------------------------------------------------
+
+  /// Plantillas en el orden en que se crearon.
+  List<IntervalProtocol> get intervalProtocols => List.unmodifiable(_protocols);
+
+  IntervalProtocol? intervalProtocol(String id) {
+    for (final p in _protocols) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
+  /// Crea o actualiza una plantilla. Las sesiones ya hechas no cambian.
+  IntervalProtocol saveIntervalProtocol({
+    String? id,
+    required String name,
+    required int workSeconds,
+    required int restSeconds,
+    required int rounds,
+    required bool sided,
+    required int switchSeconds,
+    required bool weighted,
+  }) {
+    if (id == null || intervalProtocol(id) == null) id = _uuid.v4();
+    final p = IntervalProtocol(
+      id: id,
+      name: name.trim(),
+      workSeconds: workSeconds,
+      restSeconds: restSeconds,
+      rounds: rounds,
+      sided: sided,
+      switchSeconds: switchSeconds,
+      weighted: weighted,
+    );
+    _write(Change(SyncTable.intervalProtocols, id, intervalProtocolRow(p)));
+    _commit();
+    return p;
+  }
+
+  /// Borra la plantilla; sus sesiones se conservan en el registro.
+  void deleteIntervalProtocol(String id) {
+    _write(Change(SyncTable.intervalProtocols, id, null));
+    _commit();
+  }
+
+  /// ¿Hay otra plantilla (distinta de [except]) con ese nombre?
+  bool intervalNameExists(String name, {String? except}) {
+    final n = normalize(name);
+    return _protocols.any((p) => p.id != except && normalize(p.name) == n);
+  }
+
+  /// Sesiones de la más reciente a la más antigua.
+  List<IntervalSession> get intervalSessions {
+    final list = List.of(_intervalSessions);
+    list.sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    return list;
+  }
+
+  IntervalSession? intervalSession(String id) {
+    for (final s in _intervalSessions) {
+      if (s.id == id) return s;
+    }
+    return null;
+  }
+
+  /// La sesión más reciente de una plantilla.
+  IntervalSession? lastIntervalSession(String protocolId) {
+    IntervalSession? best;
+    for (final s in _intervalSessions) {
+      if (s.protocolId != protocolId) continue;
+      if (best == null || s.startedAt.isAfter(best.startedAt)) best = s;
+    }
+    return best;
+  }
+
+  /// Guarda una sesión hecha y devuelve su id.
+  String addIntervalSession({
+    required IntervalProtocol protocol,
+    required DateTime startedAt,
+    required List<IntervalRound> done,
+    double? kg,
+    WeightUnit unit = WeightUnit.kg,
+    String? notes,
+  }) {
+    final s = IntervalSession(
+      id: _uuid.v4(),
+      protocolId: protocol.id,
+      name: protocol.name,
+      day: dateOnly(startedAt),
+      startedAt: startedAt,
+      workSeconds: protocol.workSeconds,
+      restSeconds: protocol.restSeconds,
+      rounds: protocol.rounds,
+      sided: protocol.sided,
+      done: List.unmodifiable(done),
+      kg: protocol.weighted ? kg : null,
+      unit: unit,
+    ).withNotes(notes);
+    _write(Change(SyncTable.intervalSessions, s.id, intervalSessionRow(s)));
+    _commit();
+    return s.id;
+  }
+
+  void updateIntervalNotes(String id, String? notes) {
+    final s = intervalSession(id);
+    if (s == null) return;
+    final updated = s.withNotes(notes);
+    _write(Change(SyncTable.intervalSessions, id, intervalSessionRow(updated)));
+    _commit();
+  }
+
+  void deleteIntervalSession(String id) {
+    _write(Change(SyncTable.intervalSessions, id, null));
+    _commit();
+  }
+
+  /// Días de la semana de [d] (lunes a domingo) con alguna sesión de
+  /// intervalos, como claves de [dayKey].
+  Set<String> intervalDaysInWeek(DateTime d) {
+    final monday = weekStart(d);
+    return {
+      for (final s in _intervalSessions)
+        if (!s.day.isBefore(monday) && daysBetween(monday, s.day) < 7)
+          dayKey(s.day),
+    };
+  }
 }
 
 /// Da acceso al [AppState] y redibuja a quien lo lee cuando cambia.

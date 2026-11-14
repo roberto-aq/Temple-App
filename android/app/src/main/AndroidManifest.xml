@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Supabase: también en release (Flutter solo lo agrega en debug y profile). -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Avisos del temporizador de Intervalos. -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <application
         android:label="Temple"
         android:name="${applicationName}"

@@ -1,12 +1,13 @@
 name: temple
 description: "Temple: registro de entrenamiento con sobrecarga progresiva."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.10.7
 
 dependencies:
+  audioplayers: ^6.7.1
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -15,6 +16,7 @@ dependencies:
   shared_preferences: ^2.5.5
   supabase_flutter: 2.18.3
   uuid: 4.6.0
+  wakelock_plus: ^1.6.1
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +26,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Avisos del temporizador de Intervalos (`dart run tool/generate_sounds.dart`).
+  assets:
+    - assets/sounds/
 
   fonts:
     - family: Barlow

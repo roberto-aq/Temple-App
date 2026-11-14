@@ -17,15 +17,29 @@ Diseño: proyecto «Temple» en Claude Design.
 | Progreso | `lib/screens/progress_screen.dart` |
 | Progreso por ejercicio | `lib/screens/exercise_progress_screen.dart` |
 | Historial | `lib/screens/history_screen.dart` |
+| Intervalos (semana, plantillas, registro) | `lib/screens/intervals_screen.dart` |
+| Crear / editar plantilla de intervalos | `lib/screens/interval_editor_screen.dart` |
+| Temporizador de intervalos | `lib/screens/interval_timer_screen.dart` |
+
+## Intervalos
+
+Pestaña aparte de la parte principal para ejercicios por tiempo: isométricos, paseo del granjero, sprints… No se mezcla con las series, el progreso ni el historial.
+
+- **Plantilla:** tiempo de trabajo, descanso, rondas; opcionalmente **por lado** (cada ronda hace izquierdo, cambio de lado y derecho) y **con peso** (se anota en cada sesión, en kg o lb).
+- **Temporizador:** 5 s para prepararse, luego trabajo y descanso hasta completar las rondas. Suena y vibra al cambiar de fase y en los últimos 3 segundos, y mantiene la pantalla encendida. Se puede pausar, saltar un tramo, terminar antes y bloquear los toques (para llevar el teléfono en el bolsillo). El tiempo se calcula con la hora real: si la pantalla se apaga o la app pasa a segundo plano, al volver sigue donde corresponde, pero sin la pantalla encendida puede no avisar.
+- **Registro:** cada sesión guarda el día, las rondas hechas con sus segundos reales, el peso y observaciones opcionales. Arriba se ven los días de la semana con intervalos.
+
+Los avisos sonoros (`assets/sounds/`) se generan con `dart run tool/generate_sounds.dart`. La vibración usa un canal propio de Android (`MainActivity.kt`), porque la respuesta táctil de Flutter no vibra si el teléfono la tiene desactivada.
 
 ## Estructura
 
-- `lib/models/`: ejercicios, series, rutinas y plan del día.
+- `lib/models/`: ejercicios, series, rutinas y plan del día; plantillas y sesiones de intervalos (`intervals.dart`).
 - `lib/data/`: biblioteca base de ejercicios y copia local (`shared_preferences`).
 - `lib/state/app_state.dart`: estado central (`ChangeNotifier`) expuesto con `AppScope`.
 - `lib/sync/`: sincronización con Supabase (cola de cambios, conversión a filas, cliente).
 - `lib/screens/auth_gate.dart`: elige entre iniciar sesión y la app; arma el estado de cada cuenta.
-- `lib/logic/`: formato en español y reglas de progreso (1RM estimado, tendencias, sugerencias).
+- `lib/logic/`: formato en español, reglas de progreso (1RM estimado, tendencias, sugerencias) y tramos del temporizador de intervalos.
+- `lib/device/`: avisos del temporizador (sonido, vibración, pantalla encendida).
 - `lib/widgets/`: componentes visuales e íconos del diseño.
 - `supabase/migrations/`: tablas, permisos y políticas RLS.
 
@@ -39,6 +53,10 @@ Cada usuario entra con correo y contraseña y solo ve sus datos (RLS).
 | `routines` | Rutinas; sus ejercicios en `items` (jsonb, en orden) |
 | `day_plans` | Rutinas y ejercicios cargados cada día |
 | `sets` | Una fila por serie |
+| `interval_protocols` | Plantillas de intervalos |
+| `interval_sessions` | Cada sesión de intervalos hecha; las rondas en `done` (jsonb) |
+
+Al agregar una tabla, aplica su migración **antes** de instalar la versión de la app que la usa: la app descarga todas las tablas y, si falta una, no sincroniza.
 
 Las 5 rutinas de inicio las crea un disparador al registrarse cada cuenta.
 
