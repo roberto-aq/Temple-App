@@ -47,7 +47,13 @@ Las 5 rutinas de inicio las crea un disparador al registrarse cada cuenta.
 ### Configurar
 
 1. Copia `.env.example` como `.env` con la URL y la clave **pública** del proyecto (Project Settings → API). Nunca la clave secreta.
-2. Aplica la migración: `supabase link --project-ref <ref>` y luego `supabase db push`.
+2. Aplica **todas** las migraciones de `supabase/migrations/`, en orden de nombre (empiezan por fecha y hora). De una de estas dos formas:
+   - **Sin consola:** abre cada archivo, copia su contenido en el SQL Editor del proyecto y ejecútalo; luego el siguiente. Si uno falla, corrige el error antes de seguir: los siguientes dependen de él.
+   - **Con la CLI:** `supabase link --project-ref <ref>` y luego `supabase db push`. Corre las que falten y anota cuáles ya aplicó.
+
+   No mezcles las dos en el mismo proyecto: la CLI no sabe de las que corriste a mano e intentaría repetirlas. Si un proyecto empezó a mano y quieres pasar a la CLI, marca primero las ya aplicadas, sin ejecutarlas: `supabase migration repair --status applied <versión> …` (la versión es la fecha y hora del nombre del archivo).
+
+   Cada cambio a la base va en un archivo nuevo de esta carpeta, aunque lo apliques a mano: así otro proyecto queda igual al correr todas.
 3. En Authentication → Sign In / Providers, decide si exiges confirmar el correo. Con el correo integrado de Supabase se envían muy pocos por hora; para pruebas conviene desactivarlo.
 4. Comprueba todo contra el proyecto real (registro, sincronización y que cada cuenta solo vea lo suyo):
 
