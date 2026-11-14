@@ -1,6 +1,10 @@
 import '../models/models.dart';
 
 /// Grupos musculares, en el orden de los filtros de la biblioteca.
+///
+/// En Supabase son el enum `muscle_group`: un grupo nuevo se agrega primero
+/// allí (`alter type public.muscle_group add value …`), antes de publicar la
+/// app, o el servidor rechaza los ejercicios de ese grupo.
 const muscleGroups = <MuscleGroup>[
   MuscleGroup('pecho', 'Pecho'),
   MuscleGroup('espalda', 'Espalda'),
