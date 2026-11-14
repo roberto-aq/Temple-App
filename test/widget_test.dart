@@ -327,4 +327,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('BLOQUEADO'), findsOneWidget);
   });
+
+  testWidgets('editar el nombre de un ejercicio propio conserva sus series', (
+    tester,
+  ) async {
+    late Exercise ex;
+    final app = await pumpApp(
+      tester,
+      seed: (app) {
+        ex = app.createExercise(
+          name: 'Curl araña',
+          group: 'biceps',
+          kind: ExerciseKind.weight,
+        );
+        app.addSet(DateTime(2026, 10, 19), ex.id, const SetEntry(reps: 10));
+      },
+    );
+    await tapText(tester, 'Ejercicios');
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is CircleIconButton && w.semanticLabel == 'Editar Curl araña',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // No deja usar el nombre de otro ejercicio.
+    await tester.enterText(find.byType(TextField), 'curl martillo');
+    await tapText(tester, 'Guardar cambios');
+    expect(find.text('Ya tienes un ejercicio con ese nombre.'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '  Curl araña con barra Z ');
+    await tapText(tester, 'Guardar cambios');
+    expect(find.text('«Curl araña con barra Z» actualizado.'), findsOneWidget);
+    expect(find.text('Curl araña'), findsNothing);
+    expect(find.text('Curl araña con barra Z'), findsOneWidget);
+    expect(app.exercise(ex.id)!.name, 'Curl araña con barra Z');
+    expect(app.history(ex.id).single.sets.single.reps, 10);
+    await tester.pump(const Duration(seconds: 4));
+  });
 }
