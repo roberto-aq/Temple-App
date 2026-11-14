@@ -68,13 +68,62 @@ flutter test
 
 ## Generar el APK
 
+En el teléfono de pruebas no hace falta: conectado por USB, F5 en VS Code o `flutter run --dart-define-from-file=.env` instalan la app directamente. El APK es para el teléfono de uso diario, y se reparte por GitHub Releases (más abajo).
+
+### Construir
+
+1. **Sube la versión** en `pubspec.yaml`: `1.0.0+1` → `1.0.1+2`. El número tras el `+` es el que Android compara para saber que es más nueva: debe aumentar siempre, si no el teléfono no instala encima.
+2. **Comprueba** que todo pasa y haz commit del cambio de versión:
+
+   ```bash
+   flutter analyze
+   flutter test
+   git commit -am "build: versión 1.0.1+2"
+   ```
+
+3. **Construye** con el `.env` (sin él, la app abre en «Falta configurar Supabase»):
+
+   ```bash
+   flutter build apk --release --dart-define-from-file=.env
+   ```
+
+4. **Revisa la salida del build**: si dice `android/key.properties no existe`, el APK quedó firmado con la clave de depuración y **no se instala encima** de la app del teléfono. No lo repartas; ver [Firma](#firma).
+
+Queda en `build/app/outputs/flutter-apk/app-release.apk`. Se instala encima de la versión anterior, sin desinstalar y sin perder datos.
+
+### Publicar en GitHub Releases
+
+**Una sola vez:**
+
+1. Crea en GitHub un repositorio **privado** llamado `temple`. Privado porque el APK lleva dentro la URL y la clave pública de Supabase (no es grave, RLS protege los datos, pero no hace falta repartirlas).
+2. Conecta el proyecto y sube el código:
+
+   ```bash
+   git remote add origin https://github.com/<usuario>/temple.git
+   git push -u origin main
+   ```
+
+3. Instala la CLI de GitHub e inicia sesión:
+
+   ```bash
+   winget install --id GitHub.cli
+   gh auth login
+   ```
+
+**En cada versión** (después de [Construir](#construir); `1.0.1` es la versión de `pubspec.yaml` sin el `+`):
+
 ```bash
-flutter build apk --release --dart-define-from-file=.env
+git tag v1.0.1
+git push origin main v1.0.1
+cp build/app/outputs/flutter-apk/app-release.apk build/temple-1.0.1.apk
+gh release create v1.0.1 build/temple-1.0.1.apk --title "Temple 1.0.1" --notes "Qué cambió en esta versión"
 ```
 
-Queda en `build/app/outputs/flutter-apk/app-release.apk`. Se instala encima de la versión anterior (sin desinstalar) con `flutter install` o abriendo el APK en el teléfono.
+**En el teléfono:**
 
-Antes de cada APK que repartas, sube la versión en `pubspec.yaml`: `1.0.0+1` → `1.0.1+2`. El número tras el `+` es el que Android compara para saber que es más nueva y debe aumentar siempre.
+1. Abre en el navegador `https://github.com/<usuario>/temple/releases/latest`, con tu cuenta de GitHub iniciada (el repositorio es privado). Conviene guardarla en favoritos o en la pantalla de inicio: siempre lleva a la última versión.
+2. En *Assets*, toca `temple-1.0.1.apk` para descargarlo y ábrelo para instalar.
+3. La primera vez, Android pide permitir «Instalar apps desconocidas» para el navegador.
 
 ### Firma
 
