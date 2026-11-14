@@ -45,6 +45,7 @@ Map<String, dynamic> setRow(String day, String exerciseId, SetEntry s) => {
   'exercise_id': exerciseId,
   'reps': s.reps,
   'kg': s.kg,
+  'unit': s.unit.name,
   'logged_at': s.time!.toUtc().toIso8601String(),
 };
 
@@ -58,6 +59,7 @@ Map<String, dynamic> setRow(String day, String exerciseId, SetEntry s) => {
     id: r['id'] as String,
     reps: (r['reps'] as num).toInt(),
     kg: (r['kg'] as num?)?.toDouble(),
+    unit: WeightUnit.fromName(r['unit'] as String?),
     time: DateTime.parse(r['logged_at'] as String).toLocal(),
   ),
 );

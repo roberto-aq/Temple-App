@@ -18,8 +18,10 @@ SetEntry? bestSet(Exercise ex, List<SetEntry> sets) {
   return best;
 }
 
-/// Incremento de peso sugerido: 2,5 kg desde 30 kg, 1 kg por debajo.
-double weightStep(double kg) => kg >= 30 ? 2.5 : 1;
+/// Incremento de peso sugerido: 2,5 kg desde 30 kg, 1 kg por debajo; en
+/// libras, 5 lb. [w] va en [unit].
+double weightStep(double w, [WeightUnit unit = WeightUnit.kg]) =>
+    unit == WeightUnit.lb ? 5 : (w >= 30 ? 2.5 : 1);
 
 /// Incremento de tiempo sugerido: 5 s hasta 2 min, luego 1 min.
 int timeStep(int seconds) => seconds < 120 ? 5 : 60;
@@ -81,10 +83,11 @@ BeatInfo? beatInfo(
     );
   }
   if (ex.weighted) {
-    final kg = pBest.kg ?? 0;
+    final unit = pBest.unit, u = unit.symbol;
+    final w = unit.fromKg(pBest.kg ?? 0);
     return BeatInfo(
       BeatState.target,
-      '${fmtNum(kg)} kg × ${pBest.reps + 1}  o  ${fmtNum(kg + weightStep(kg))} kg × ${pBest.reps}',
+      '${fmtNum(w)} $u × ${pBest.reps + 1}  o  ${fmtNum(w + weightStep(w, unit))} $u × ${pBest.reps}',
     );
   }
   if (ex.timed) {
@@ -101,17 +104,20 @@ BeatInfo? beatInfo(
 enum MetricId { main, weight, volume }
 
 class Metric {
-  const Metric(this.id, this.label, this.long, this.unit);
+  const Metric(this.id, this.label, this.long, this.unit, [this.scale = 1]);
   final MetricId id;
   final String label;
   final String long;
   final String unit;
 
+  /// Factor para mostrar el valor en [unit]: los pesos se calculan en kg.
+  final double scale;
+
   bool get isTime => unit == 'seg';
 
   /// Un valor con su unidad: «62,5 kg», «45 reps» o «2 min 15 seg».
   String format(num v) =>
-      isTime ? durationText(v.round()) : '${fmtVal(v)} $unit';
+      isTime ? durationText(v.round()) : '${fmtVal(v * scale)} $unit';
 
   /// Una diferencia con signo: «+2,5 kg» o «+1 min».
   String formatDelta(num d) {
@@ -121,7 +127,7 @@ class Metric {
 
   /// Valor y unidad por separado, para mostrarlos en grande: («62,5», «kg»).
   (String, String) parts(num v) {
-    if (!isTime) return (fmtVal(v), unit);
+    if (!isTime) return (fmtVal(v * scale), unit);
     final s = v.round();
     if (s < 60) return ('$s', 'seg');
     if (s % 60 == 0) return ('${s ~/ 60}', 'min');
@@ -129,12 +135,14 @@ class Metric {
   }
 }
 
-List<Metric> metricsFor(Exercise ex) {
+/// Métricas del ejercicio; las de peso, en [unit].
+List<Metric> metricsFor(Exercise ex, [WeightUnit unit = WeightUnit.kg]) {
   if (ex.weighted) {
-    return const [
-      Metric(MetricId.main, '1RM est.', '1RM estimado', 'kg'),
-      Metric(MetricId.weight, 'Peso máx.', 'peso máximo', 'kg'),
-      Metric(MetricId.volume, 'Volumen', 'volumen', 'kg'),
+    final u = unit.symbol, scale = unit.fromKg(1);
+    return [
+      Metric(MetricId.main, '1RM est.', '1RM estimado', u, scale),
+      Metric(MetricId.weight, 'Peso máx.', 'peso máximo', u, scale),
+      Metric(MetricId.volume, 'Volumen', 'volumen', u, scale),
     ];
   }
   if (ex.timed) {
@@ -218,7 +226,12 @@ class ExerciseAnalysis {
 
   double get first => mains.isEmpty ? 0 : mains.first;
   double get last => mains.isEmpty ? 0 : mains.last;
-  Metric get mainMetric => metricsFor(exercise).first;
+
+  /// Unidad de peso de la última serie registrada.
+  WeightUnit get unit =>
+      sessions.isEmpty ? WeightUnit.kg : sessions.last.sets.last.unit;
+
+  Metric get mainMetric => metricsFor(exercise, unit).first;
 
   factory ExerciseAnalysis(
     Exercise ex,
@@ -314,11 +327,12 @@ class ExerciseAnalysis {
     final mx = reps.reduce(math.max), mn = reps.reduce(math.min);
     final ex = exercise;
     if (ex.weighted) {
-      final w = sets.map((s) => s.kg ?? 0).reduce(math.max);
-      final next = fmtNum(w + weightStep(w));
+      final unit = sets.last.unit, u = unit.symbol;
+      final w = unit.fromKg(sets.map((s) => s.kg ?? 0).reduce(math.max));
+      final next = fmtNum(w + weightStep(w, unit));
       return mn == mx
-          ? 'Hiciste todas las series a $mx reps con ${fmtNum(w)} kg. Prueba con $next kg, aunque bajen un poco las repeticiones.'
-          : 'Mantén ${fmtNum(w)} kg e intenta llegar a $mx reps en todas las series. Cuando lo logres, sube a $next kg.';
+          ? 'Hiciste todas las series a $mx reps con ${fmtNum(w)} $u. Prueba con $next $u, aunque bajen un poco las repeticiones.'
+          : 'Mantén ${fmtNum(w)} $u e intenta llegar a $mx reps en todas las series. Cuando lo logres, sube a $next $u.';
     }
     if (ex.timed) {
       return mn == mx

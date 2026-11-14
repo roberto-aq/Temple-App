@@ -116,6 +116,7 @@ void main() {
     expect(set['exercise_id'], ex.id);
     expect(set['reps'], 10);
     expect(set['kg'], 80.0);
+    expect(set['unit'], 'kg');
     expect(
       DateTime.parse(set['logged_at'] as String).isAtSameMomentAs(fixedNow),
       isTrue,

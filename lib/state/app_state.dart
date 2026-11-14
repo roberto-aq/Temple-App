@@ -564,6 +564,7 @@ class AppState extends ChangeNotifier {
       id: _uuid.v4(),
       reps: entry.reps,
       kg: entry.kg,
+      unit: entry.unit,
       time: entry.time ?? now,
     );
     _write(Change(SyncTable.sets, s.id!, setRow(dayKey(d), exId, s)));
@@ -579,6 +580,7 @@ class AppState extends ChangeNotifier {
       id: old.id,
       reps: entry.reps,
       kg: entry.kg,
+      unit: entry.unit,
       time: old.time ?? now,
     );
     _write(Change(SyncTable.sets, s.id!, setRow(dayKey(d), exId, s)));

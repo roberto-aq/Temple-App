@@ -63,28 +63,64 @@ class Exercise {
   );
 }
 
+/// Unidad en que se anota el peso. Se guarda siempre en kg; la unidad solo
+/// dice cómo mostrarlo.
+enum WeightUnit {
+  kg('kg', 'kilos'),
+  lb('lb', 'libras');
+
+  const WeightUnit(this.symbol, this.word);
+  final String symbol;
+  final String word;
+
+  static const _kgPerLb = 0.45359237;
+
+  /// De kg a esta unidad.
+  double fromKg(double v) => this == lb ? v / _kgPerLb : v;
+
+  /// De esta unidad a kg, con 2 decimales como en Supabase.
+  double toKg(double v) => this == lb ? (v * _kgPerLb * 100).round() / 100 : v;
+
+  static WeightUnit fromName(String? name) =>
+      name == WeightUnit.lb.name ? WeightUnit.lb : WeightUnit.kg;
+}
+
 /// Una serie registrada. `reps` son segundos en ejercicios de tiempo; `kg` es null si no lleva peso.
-/// `id` lo asigna [AppState] al registrarla.
+/// `unit` es la unidad en que se anotó el peso. `id` lo asigna [AppState] al registrarla.
 class SetEntry {
-  const SetEntry({this.id, required this.reps, this.kg, this.time});
+  const SetEntry({
+    this.id,
+    required this.reps,
+    this.kg,
+    this.unit = WeightUnit.kg,
+    this.time,
+  });
 
   final String? id;
   final int reps;
   final double? kg;
+  final WeightUnit unit;
   final DateTime? time;
 
-  SetEntry copyWith({String? id, int? reps, double? kg, DateTime? time}) =>
-      SetEntry(
-        id: id ?? this.id,
-        reps: reps ?? this.reps,
-        kg: kg ?? this.kg,
-        time: time ?? this.time,
-      );
+  SetEntry copyWith({
+    String? id,
+    int? reps,
+    double? kg,
+    WeightUnit? unit,
+    DateTime? time,
+  }) => SetEntry(
+    id: id ?? this.id,
+    reps: reps ?? this.reps,
+    kg: kg ?? this.kg,
+    unit: unit ?? this.unit,
+    time: time ?? this.time,
+  );
 
   Map<String, dynamic> toJson() => {
     if (id != null) 'id': id,
     'reps': reps,
     if (kg != null) 'kg': kg,
+    if (unit != WeightUnit.kg) 'u': unit.name,
     if (time != null) 't': time!.millisecondsSinceEpoch,
   };
 
@@ -92,6 +128,7 @@ class SetEntry {
     id: j['id'] as String?,
     reps: (j['reps'] as num).toInt(),
     kg: (j['kg'] as num?)?.toDouble(),
+    unit: WeightUnit.fromName(j['u'] as String?),
     time: j['t'] == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch((j['t'] as num).toInt()),

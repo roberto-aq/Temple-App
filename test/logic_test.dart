@@ -99,6 +99,21 @@ void main() {
       expect(plank.maxReps, 10800);
       expect(pullups.maxReps, 300);
     });
+
+    test('peso en libras: se guarda en kg y se muestra en lb', () {
+      final kg = WeightUnit.lb.toKg(25);
+      expect(kg, 11.34);
+      final s = SetEntry(reps: 12, kg: kg, unit: WeightUnit.lb);
+      expect(weightText(s), '25 lb');
+      expect(setLabel(bench, s), '25 lb × 12');
+      expect(setsText(bench, [s, s.copyWith(reps: 10)]), '25 lb × 12, 10');
+      expect(
+        setsText(bench, [s, const SetEntry(reps: 8, kg: 60)]),
+        '12 × 25 lb · 8 × 60 kg',
+      );
+      expect(WeightUnit.kg.toKg(62.5), 62.5);
+      expect(weightText(const SetEntry(reps: 8, kg: 62.5)), '62,5 kg');
+    });
   });
 
   group('superar la última vez', () {
@@ -132,6 +147,16 @@ void main() {
       final b = beatInfo(bench, prev, kgSets(62.5, [8]), best)!;
       expect(b.state, BeatState.record);
       expect(b.label, '¡Nuevo récord personal!');
+    });
+
+    test('en libras propone subir 5 lb', () {
+      final lb = ExerciseSession(DateTime(2026, 10, 19), [
+        SetEntry(reps: 10, kg: WeightUnit.lb.toKg(25), unit: WeightUnit.lb),
+      ]);
+      expect(
+        beatInfo(bench, lb, const [], 0)!.text,
+        '25 lb × 11  o  30 lb × 10',
+      );
     });
 
     test('sin peso y por tiempo', () {
@@ -255,6 +280,30 @@ void main() {
       expect(metricValue(bench, sets, MetricId.main), 82.3);
       expect(metricValue(pullups, repSets([8, 7]), MetricId.volume), 15);
       expect(recordFlags([5, 6, 6, 7]), [false, true, false, true]);
+    });
+
+    test('en libras: métricas y sugerencia en la unidad de la última serie', () {
+      List<SetEntry> lbSets(double lb) => [
+        for (final r in [8, 8])
+          SetEntry(reps: r, kg: WeightUnit.lb.toKg(lb), unit: WeightUnit.lb),
+      ];
+      final a = ExerciseAnalysis(bench, [
+        ExerciseSession(today.subtract(const Duration(days: 7)), lbSets(25)),
+        ExerciseSession(today, lbSets(30)),
+      ], today);
+      expect(a.unit, WeightUnit.lb);
+      expect(a.trend, Trend.up);
+      final peso = metricsFor(bench, a.unit)[1];
+      expect(
+        peso.format(metricValue(bench, a.sessions.last.sets, peso.id)),
+        '30 lb',
+      );
+      // 1RM estimado: de 31,7 lb a 38 lb.
+      expect(a.detail, allOf(startsWith('+6'), endsWith('lb en 1 semana')));
+      expect(
+        a.suggestion,
+        'Hiciste todas las series a 8 reps con 30 lb. Prueba con 35 lb, aunque bajen un poco las repeticiones.',
+      );
     });
   });
 }

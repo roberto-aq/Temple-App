@@ -22,7 +22,7 @@ class SupabaseBackend implements RemoteBackend {
     SyncTable.exercises: 'id, name, muscle_group, kind',
     SyncTable.routines: 'id, name, items',
     SyncTable.dayPlans: 'day, routine_ids, exercise_ids',
-    SyncTable.sets: 'id, day, exercise_id, reps, kg, logged_at',
+    SyncTable.sets: 'id, day, exercise_id, reps, kg, unit, logged_at',
   };
 
   @override

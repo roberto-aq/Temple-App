@@ -37,7 +37,7 @@ class _ExerciseProgressScreenState extends State<ExerciseProgressScreen> {
     final app = AppScope.of(context);
     final ex = app.exercise(widget.exerciseId)!;
     final analysis = app.analyze(ex);
-    final metrics = metricsFor(ex);
+    final metrics = metricsFor(ex, analysis.unit);
     final metric = metrics.firstWhere(
       (m) => m.id == _metric,
       orElse: () => metrics.first,

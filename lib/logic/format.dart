@@ -111,11 +111,11 @@ String unitWord(Exercise ex) => ex.timed ? 'seg' : 'reps';
 String setsText(Exercise ex, List<SetEntry> sets) {
   final reps = sets.map((s) => s.reps).join(', ');
   if (ex.weighted) {
-    final kgs = sets.map((s) => s.kg ?? 0).toList();
-    if (kgs.every((k) => k == kgs.first)) {
-      return '${fmtNum(kgs.first)} kg × $reps';
+    final weights = sets.map(weightText).toList();
+    if (weights.every((w) => w == weights.first)) {
+      return '${weights.first} × $reps';
     }
-    return sets.map((s) => '${s.reps} × ${fmtNum(s.kg ?? 0)} kg').join(' · ');
+    return sets.map((s) => '${s.reps} × ${weightText(s)}').join(' · ');
   }
   if (ex.timed && sets.any((s) => s.reps >= 60)) {
     if (sets.every((s) => s.reps % 60 == 0)) {
@@ -127,9 +127,14 @@ String setsText(Exercise ex, List<SetEntry> sets) {
 }
 
 /// Una serie: «62,5 kg × 8», «12 reps» o «1 min 30 seg».
-String setLabel(Exercise ex, SetEntry s) => ex.weighted
-    ? '${fmtNum(s.kg ?? 0)} kg × ${s.reps}'
-    : amountText(ex, s.reps);
+String setLabel(Exercise ex, SetEntry s) =>
+    ex.weighted ? '${weightText(s)} × ${s.reps}' : amountText(ex, s.reps);
+
+/// El peso de una serie en la unidad en que se anotó, sin unidad: «25».
+String weightValue(SetEntry s) => fmtNum(s.unit.fromKg(s.kg ?? 0));
+
+/// El peso de una serie con su unidad: «62,5 kg» o «25 lb».
+String weightText(SetEntry s) => '${weightValue(s)} ${s.unit.symbol}';
 
 /// Repeticiones o tiempo de una serie, sin el peso: «12 reps» o «20 min».
 String amountText(Exercise ex, int reps) =>

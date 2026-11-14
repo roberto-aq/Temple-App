@@ -31,13 +31,16 @@ class LogExerciseScreen extends StatefulWidget {
 
 class _LogExerciseScreenState extends State<LogExerciseScreen> {
   final _repsCtrl = TextEditingController();
-  final _kgCtrl = TextEditingController();
+  final _weightCtrl = TextEditingController();
   final _repsFocus = FocusNode();
-  final _kgFocus = FocusNode();
+  final _weightFocus = FocusNode();
 
   /// Repeticiones o, en ejercicios por tiempo, segundos (también en minutos).
   int _reps = 10;
-  double _kg = 0;
+
+  /// Peso en la unidad elegida ([_unit]); se pasa a kg al guardar.
+  double _weight = 0;
+  WeightUnit _unit = WeightUnit.kg;
   int? _editIdx;
   bool _initialized = false;
 
@@ -50,7 +53,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
   void initState() {
     super.initState();
     _repsFocus.addListener(() => _onFocusChange(_repsFocus, _repsCtrl));
-    _kgFocus.addListener(() => _onFocusChange(_kgFocus, _kgCtrl));
+    _weightFocus.addListener(() => _onFocusChange(_weightFocus, _weightCtrl));
   }
 
   @override
@@ -71,8 +74,10 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     _minutes =
         _timed &&
         (last == null ? ex.group == 'cardio' : _wholeMinutes(last.reps));
+    // El peso también, en la unidad de la última serie.
+    _unit = last?.unit ?? WeightUnit.kg;
     if (last != null) {
-      _setDraft(last.reps, last.kg ?? 0);
+      _setDraft(last.reps, _weightOf(last));
     } else {
       _setDraft(ex.timed ? (_minutes ? 600 : 30) : 10, ex.weighted ? 20 : 0);
     }
@@ -80,20 +85,30 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
 
   static bool _wholeMinutes(int seconds) => seconds >= 60 && seconds % 60 == 0;
 
+  /// El peso de la serie en su unidad, con 2 decimales como el campo.
+  static double _weightOf(SetEntry s) =>
+      (s.unit.fromKg(s.kg ?? 0) * 100).round() / 100;
+
+  /// Alto del selector de kg y lb y del título de repeticiones a su lado.
+  static const _weightHeader = 44.0;
+
+  double get _maxWeight => _unit == WeightUnit.lb ? 999 : 500;
+  double get _weightStep => _unit == WeightUnit.lb ? 5 : 2.5;
+
   @override
   void dispose() {
     _repsCtrl.dispose();
-    _kgCtrl.dispose();
+    _weightCtrl.dispose();
     _repsFocus.dispose();
-    _kgFocus.dispose();
+    _weightFocus.dispose();
     super.dispose();
   }
 
-  void _setDraft(int reps, double kg) {
+  void _setDraft(int reps, double weight) {
     _reps = reps;
-    _kg = kg;
+    _weight = weight;
     _repsCtrl.text = _minutes ? '${reps ~/ 60}' : '$reps';
-    _kgCtrl.text = fmtNum(kg);
+    _weightCtrl.text = fmtNum(weight);
   }
 
   /// Cambia entre segundos y minutos; en minutos redondea al minuto.
@@ -103,7 +118,20 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     setState(() {
       _minutes = minutes;
       if (minutes) _reps = math.max(1, (_reps / 60).round()) * 60;
-      _setDraft(math.min(_reps, _max), _kg);
+      _setDraft(math.min(_reps, _max), _weight);
+    });
+  }
+
+  /// Cambia entre kilos y libras conservando el peso, redondeado a 0,5 kg
+  /// o a 2,5 lb.
+  void _setWeightUnit(WeightUnit unit) {
+    if (unit == _unit) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      final v = unit.fromKg(_unit.toKg(_weight));
+      final r = unit == WeightUnit.lb ? 2.5 : 0.5;
+      _unit = unit;
+      _setDraft(_reps, ((v / r).round() * r).clamp(0, _maxWeight).toDouble());
     });
   }
 
@@ -116,7 +144,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
       );
     } else {
       // Al salir del campo se muestra el valor válido vigente.
-      setState(() => _setDraft(_reps, _kg));
+      setState(() => _setDraft(_reps, _weight));
     }
   }
 
@@ -125,24 +153,28 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
     if (n != null && n > 0) _reps = math.min(_minutes ? n * 60 : n, _max);
   }
 
-  void _onKgChanged(String v) {
+  void _onWeightChanged(String v) {
     final n = double.tryParse(v.replaceAll(',', '.'));
-    if (n != null) _kg = n > 500 ? 500 : n;
+    if (n != null) _weight = math.min(n, _maxWeight);
   }
 
-  void _bump({int reps = 0, double kg = 0, required int step}) {
+  void _bump({int reps = 0, double weight = 0, required int step}) {
     FocusScope.of(context).unfocus();
     setState(
       () => _setDraft(
         (_reps + reps).clamp(step, _max),
-        (_kg + kg).clamp(0, 500).toDouble(),
+        (_weight + weight).clamp(0, _maxWeight).toDouble(),
       ),
     );
   }
 
   void _saveSet(AppState app, Exercise ex) {
     FocusScope.of(context).unfocus();
-    final entry = SetEntry(reps: _reps, kg: ex.weighted ? _kg : null);
+    final entry = SetEntry(
+      reps: _reps,
+      kg: ex.weighted ? _unit.toKg(_weight) : null,
+      unit: _unit,
+    );
     final idx = _editIdx;
     if (idx != null && idx < app.setsOn(widget.day, ex.id).length) {
       app.replaceSet(widget.day, ex.id, idx, entry);
@@ -161,7 +193,9 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
         _editIdx = i;
         // Una serie con segundos sueltos solo se puede editar en segundos.
         if (_minutes && !_wholeMinutes(s.reps)) _minutes = false;
-        _setDraft(s.reps, s.kg ?? 0);
+        // El peso se edita en la unidad en que se anotó.
+        _unit = s.unit;
+        _setDraft(s.reps, _weightOf(s));
       }
     });
   }
@@ -298,10 +332,26 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                               : (_minutes ? 'Minutos' : 'Segundos'),
                           header: _timed
                               ? _UnitToggle(
-                                  minutes: _minutes,
+                                  options: const [
+                                    (false, 'SEG', 'segundos'),
+                                    (true, 'MIN', 'minutos'),
+                                  ],
+                                  value: _minutes,
                                   onChanged: _setUnit,
                                 )
-                              : null,
+                              // A la altura del selector de kg y lb.
+                              : (ex.weighted
+                                    ? SizedBox(
+                                        height: _weightHeader,
+                                        child: Center(
+                                          child: Text(
+                                            'REPETICIONES',
+                                            style: AppText.label(),
+                                          ),
+                                        ),
+                                      )
+                                    : null),
+                          labelBelow: _timed,
                           maxLength: _timed && !_minutes ? 5 : 3,
                           controller: _repsCtrl,
                           focusNode: _repsFocus,
@@ -322,16 +372,29 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _Counter(
-                            label: 'Peso (kg)',
-                            controller: _kgCtrl,
-                            focusNode: _kgFocus,
+                            label: 'Peso en ${_unit.word}',
+                            header: _UnitToggle(
+                              options: [
+                                for (final u in WeightUnit.values)
+                                  (u, u.symbol.toUpperCase(), u.word),
+                              ],
+                              value: _unit,
+                              onChanged: _setWeightUnit,
+                              height: _weightHeader,
+                            ),
+                            controller: _weightCtrl,
+                            focusNode: _weightFocus,
                             highlighted: editing,
                             decimal: true,
-                            onChanged: _onKgChanged,
-                            onMinus: () => _bump(kg: -2.5, step: ex.step),
-                            onPlus: () => _bump(kg: 2.5, step: ex.step),
-                            minusLabel: 'Restar 2,5 kg',
-                            plusLabel: 'Sumar 2,5 kg',
+                            onChanged: _onWeightChanged,
+                            onMinus: () =>
+                                _bump(weight: -_weightStep, step: ex.step),
+                            onPlus: () =>
+                                _bump(weight: _weightStep, step: ex.step),
+                            minusLabel:
+                                'Restar ${fmtNum(_weightStep)} ${_unit.symbol}',
+                            plusLabel:
+                                'Sumar ${fmtNum(_weightStep)} ${_unit.symbol}',
                           ),
                         ),
                       ],
@@ -478,7 +541,7 @@ class _LogExerciseScreenState extends State<LogExerciseScreen> {
                                     ),
                                   ),
                                   Text(
-                                    '${amountText(ex, prev.sets[i].reps)}${ex.weighted ? ' · ${fmtNum(prev.sets[i].kg ?? 0)} kg' : ''}',
+                                    '${amountText(ex, prev.sets[i].reps)}${ex.weighted ? ' · ${weightText(prev.sets[i])}' : ''}',
                                     style: AppText.display(
                                       22,
                                       weight: FontWeight.w700,
@@ -605,6 +668,7 @@ class _Counter extends StatelessWidget {
     required this.minusLabel,
     required this.plusLabel,
     this.header,
+    this.labelBelow = false,
     this.maxLength = 3,
   });
 
@@ -612,6 +676,9 @@ class _Counter extends StatelessWidget {
 
   /// Reemplaza el título (p. ej. el selector de segundos o minutos).
   final Widget? header;
+
+  /// Muestra [label] bajo el número (cuando [header] ocupa el título).
+  final bool labelBelow;
 
   /// Cifras que admite el campo entero.
   final int maxLength;
@@ -666,7 +733,7 @@ class _Counter extends StatelessWidget {
                     decimal: decimal,
                   ),
                   inputFormatters: decimal
-                      ? [_KgFormatter()]
+                      ? [_WeightFormatter()]
                       : [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(maxLength),
@@ -684,7 +751,7 @@ class _Counter extends StatelessWidget {
             ),
           ),
           // Con selector arriba, la unidad completa va bajo el número.
-          if (header != null) ...[
+          if (labelBelow) ...[
             const SizedBox(height: 8),
             Text(label.toUpperCase(), style: AppText.label()),
           ],
@@ -757,22 +824,29 @@ class _HeadStat extends StatelessWidget {
   }
 }
 
-/// Selector «SEG | MIN» de los ejercicios por tiempo.
-class _UnitToggle extends StatelessWidget {
-  const _UnitToggle({required this.minutes, required this.onChanged});
-  final bool minutes;
-  final ValueChanged<bool> onChanged;
+/// Selector de unidad: «SEG | MIN» en ejercicios por tiempo, «KG | LB» en
+/// los de peso. Cada opción: valor, texto y unidad para lectores de pantalla.
+class _UnitToggle<T> extends StatelessWidget {
+  const _UnitToggle({
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.height = 55,
+  });
+  final List<(T, String, String)> options;
+  final T value;
+  final ValueChanged<T> onChanged;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
-    Widget option(String text, String unit, bool value) {
-      final on = minutes == value;
+    Widget option(T v, String text, String unit) {
+      final on = value == v;
       return Expanded(
         child: Pressable(
-          onTap: () => onChanged(value),
+          onTap: () => onChanged(v),
           color: on ? AppColors.accent : Colors.transparent,
           radius: 12,
-          height: 44,
           selected: on,
           semanticLabel: 'Registrar en $unit',
           child: Center(
@@ -791,6 +865,7 @@ class _UnitToggle extends StatelessWidget {
     }
 
     return Container(
+      height: height,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.control,
@@ -798,10 +873,12 @@ class _UnitToggle extends StatelessWidget {
         border: Border.all(color: AppColors.borderStrong, width: 1.5),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          option('SEG', 'segundos', false),
-          const SizedBox(width: 4),
-          option('MIN', 'minutos', true),
+          for (final (i, (v, text, unit)) in options.indexed) ...[
+            if (i > 0) const SizedBox(width: 4),
+            option(v, text, unit),
+          ],
         ],
       ),
     );
@@ -809,7 +886,7 @@ class _UnitToggle extends StatelessWidget {
 }
 
 /// Acepta hasta 3 enteros y 2 decimales, con coma o punto.
-class _KgFormatter extends TextInputFormatter {
+class _WeightFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -949,7 +1026,7 @@ class _LoggedSetRow extends StatelessWidget {
       numColor = AppColors.textFaint;
     }
     final main =
-        '${amountText(ex, entry.reps)}${ex.weighted ? ' · ${fmtNum(entry.kg ?? 0)} kg' : ''}';
+        '${amountText(ex, entry.reps)}${ex.weighted ? ' · ${weightText(entry)}' : ''}';
     final big = AppText.display(32, height: 1);
     final small = AppText.display(
       15,
@@ -996,9 +1073,9 @@ class _LoggedSetRow extends StatelessWidget {
                         textBaseline: TextBaseline.alphabetic,
                         children: [
                           if (ex.weighted) ...[
-                            Text(fmtNum(entry.kg ?? 0), style: big),
+                            Text(weightValue(entry), style: big),
                             const SizedBox(width: 4),
-                            Text('kg', style: small),
+                            Text(entry.unit.symbol, style: small),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,

@@ -140,6 +140,40 @@ void main() {
     expect(find.text('¡NUEVO RÉCORD PERSONAL!'), findsOneWidget);
   });
 
+  testWidgets('el peso se anota en kg o lb y se abre en la última unidad', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      seed: (app) {
+        app.addSet(
+          DateTime(2026, 10, 19),
+          'curl',
+          SetEntry(reps: 12, kg: WeightUnit.lb.toKg(25), unit: WeightUnit.lb),
+        );
+        app.addExerciseToDay(today, 'curl');
+      },
+    );
+    await tapText(tester, 'Curl de bíceps');
+    expect(find.text('25 lb × 13  o  30 lb × 12'), findsOneWidget);
+    expect(find.text('12 reps · 25 lb'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Sumar 5 lb'));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Agregar serie');
+    final first = app.setsOn(today, 'curl').single;
+    expect(first.unit, WeightUnit.lb);
+    expect(first.kg, 13.61, reason: '30 lb');
+
+    // A kilos: conserva el peso, redondeado a 0,5 kg.
+    await tester.tap(find.bySemanticsLabel('Registrar en kilos'));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Agregar serie');
+    final second = app.setsOn(today, 'curl').last;
+    expect(second.unit, WeightUnit.kg);
+    expect(second.kg, 13.5);
+  });
+
   testWidgets('crear una rutina eligiendo ejercicios de la biblioteca', (
     tester,
   ) async {

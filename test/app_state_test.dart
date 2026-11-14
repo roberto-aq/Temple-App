@@ -192,6 +192,11 @@ void main() {
     app.loadRoutine('r1', today);
     app.addSet(today, 'press-banca', const SetEntry(reps: 8, kg: 62.5));
     app.addSet(today, ex.id, const SetEntry(reps: 30));
+    app.addSet(
+      today,
+      'curl',
+      const SetEntry(reps: 12, kg: 11.34, unit: WeightUnit.lb),
+    );
     final rid = app.saveRoutine(
       name: 'Glúteos',
       items: [RoutineItem(exerciseId: ex.id, sets: 4, reps: 30)],
@@ -203,6 +208,8 @@ void main() {
     expect(reloaded.exercise(ex.id)!.custom, isTrue);
     expect(reloaded.sessionName(today), 'Pecho y tríceps');
     expect(reloaded.setsOn(today, 'press-banca').single.kg, 62.5);
+    expect(reloaded.setsOn(today, 'press-banca').single.unit, WeightUnit.kg);
+    expect(reloaded.setsOn(today, 'curl').single.unit, WeightUnit.lb);
     expect(reloaded.setsOn(today, ex.id).single.kg, isNull);
     expect(reloaded.setsOn(today, ex.id).single.time, fixedNow);
     expect(reloaded.routine(rid)!.items.single.sets, 4);

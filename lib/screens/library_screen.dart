@@ -497,7 +497,7 @@ class _LogRow extends StatelessWidget {
     if (history.isNotEmpty) {
       final last = history.last.sets;
       info =
-          'Última: ${last.length} × ${amountText(ex, last.first.reps)}${ex.weighted ? ' · ${fmtNum(last.first.kg ?? 0)} kg' : ''}';
+          'Última: ${last.length} × ${amountText(ex, last.first.reps)}${ex.weighted ? ' · ${weightText(last.first)}' : ''}';
     }
     if (ex.custom) info = 'Creado por ti · $info';
     final chip = inSession
