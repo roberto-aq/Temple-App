@@ -154,7 +154,7 @@ void main() {
         app.addExerciseToDay(today, 'curl');
       },
     );
-    await tapText(tester, 'Curl de bíceps');
+    await tapText(tester, 'Curl de bíceps con mancuernas');
     expect(find.text('25 lb × 13  o  30 lb × 12'), findsOneWidget);
     expect(find.text('12 reps · 25 lb'), findsOneWidget);
 
@@ -312,7 +312,7 @@ void main() {
     );
     await tapText(tester, 'Ejercicios');
     expect(find.text('TUS EJERCICIOS · 1'), findsOneWidget);
-    expect(find.text('BIBLIOTECA · 32'), findsOneWidget);
+    expect(find.text('BIBLIOTECA · 33'), findsOneWidget);
 
     await tester.tap(
       find.byWidgetPredicate(
